@@ -1,0 +1,7 @@
+
+#ifndef ELF_RELOC
+#error "ELF_RELOC must be defined"
+#endif
+
+// No relocation
+ELF_RELOC(R_SIMPLE_NONE,        0)

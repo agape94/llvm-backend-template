@@ -391,6 +391,17 @@ static uint64_t resolveLanai(uint64_t Type, uint64_t Offset, uint64_t S,
   llvm_unreachable("Invalid relocation type");
 }
 
+static bool supportsSimple(uint64_t Type) {
+  return Type == ELF::R_SIMPLE_NONE;
+}
+
+static uint64_t resolveSimple(uint64_t Type, uint64_t Offset, uint64_t S,
+                             uint64_t /*LocData*/, int64_t Addend) {
+  if (Type == ELF::R_SIMPLE_NONE)
+    return S + Addend;
+  llvm_unreachable("Invalid relocation type");
+}
+
 static bool supportsMips32(uint64_t Type) {
   switch (Type) {
   case ELF::R_MIPS_32:
@@ -825,6 +836,8 @@ getRelocationResolver(const ObjectFile &Obj) {
       return {supportsAVR, resolveAVR};
     case Triple::lanai:
       return {supportsLanai, resolveLanai};
+    case Triple::simple:
+      return {supportsSimple, resolveSimple};
     case Triple::loongarch32:
       return {supportsLoongArch, resolveLoongArch};
     case Triple::mipsel:
