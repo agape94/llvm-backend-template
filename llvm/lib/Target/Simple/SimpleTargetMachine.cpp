@@ -113,11 +113,9 @@ bool SimplePassConfig::addInstSelector() {
 // Implemented by targets that want to run passes immediately before
 // machine code is emitted.
 void SimplePassConfig::addPreEmitPass() {
-  addPass(createSimpleDelaySlotFillerPass(getSimpleTargetMachine()));
 }
 
 // Run passes after prolog-epilog insertion and before the second instruction
 // scheduling pass.
 void SimplePassConfig::addPreSched2() {
-  addPass(createSimpleMemAluCombinerPass());
 }

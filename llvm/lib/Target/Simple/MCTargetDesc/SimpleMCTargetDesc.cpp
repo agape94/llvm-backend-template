@@ -39,130 +39,19 @@
 
 using namespace llvm;
 
-static MCInstrInfo *createSimpleMCInstrInfo() {
-  MCInstrInfo *X = new MCInstrInfo();
-  InitSimpleMCInstrInfo(X);
-  return X;
-}
-
-static MCRegisterInfo *createSimpleMCRegisterInfo(const Triple & /*TT*/) {
-  MCRegisterInfo *X = new MCRegisterInfo();
-  InitSimpleMCRegisterInfo(X, Simple::RCA, 0, 0, Simple::PC);
-  return X;
-}
-
-static MCSubtargetInfo *
-createSimpleMCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS) {
-  std::string CPUName = std::string(CPU);
-  if (CPUName.empty())
-    CPUName = "generic";
-
-  return createSimpleMCSubtargetInfoImpl(TT, CPUName, /*TuneCPU*/ CPUName, FS);
-}
-
-static MCStreamer *createMCStreamer(const Triple &T, MCContext &Context,
-                                    std::unique_ptr<MCAsmBackend> &&MAB,
-                                    std::unique_ptr<MCObjectWriter> &&OW,
-                                    std::unique_ptr<MCCodeEmitter> &&Emitter,
-                                    bool RelaxAll) {
-  if (!T.isOSBinFormatELF())
-    llvm_unreachable("OS not supported");
-
-  return createELFStreamer(Context, std::move(MAB), std::move(OW),
-                           std::move(Emitter), RelaxAll);
-}
-
 static MCInstPrinter *createSimpleMCInstPrinter(const Triple & /*T*/,
                                                unsigned SyntaxVariant,
                                                const MCAsmInfo &MAI,
                                                const MCInstrInfo &MII,
                                                const MCRegisterInfo &MRI) {
-  if (SyntaxVariant == 0)
-    return new SimpleInstPrinter(MAI, MII, MRI);
-  return nullptr;
-}
-
-static MCRelocationInfo *createSimpleElfRelocation(const Triple &TheTriple,
-                                                  MCContext &Ctx) {
-  return createMCRelocationInfo(TheTriple, Ctx);
-}
-
-namespace {
-
-class SimpleMCInstrAnalysis : public MCInstrAnalysis {
-public:
-  explicit SimpleMCInstrAnalysis(const MCInstrInfo *Info)
-      : MCInstrAnalysis(Info) {}
-
-  bool evaluateBranch(const MCInst &Inst, uint64_t Addr, uint64_t Size,
-                      uint64_t &Target) const override {
-    if (Inst.getNumOperands() == 0)
-      return false;
-    if (!isConditionalBranch(Inst) && !isUnconditionalBranch(Inst) &&
-        !isCall(Inst))
-      return false;
-
-    if (Info->get(Inst.getOpcode()).operands()[0].OperandType ==
-        MCOI::OPERAND_PCREL) {
-      int64_t Imm = Inst.getOperand(0).getImm();
-      Target = Addr + Size + Imm;
-      return true;
-    } else {
-      int64_t Imm = Inst.getOperand(0).getImm();
-
-      // Skip case where immediate is 0 as that occurs in file that isn't linked
-      // and the branch target inferred would be wrong.
-      if (Imm == 0)
-        return false;
-
-      Target = Imm;
-      return true;
-    }
-  }
-};
-
-} // end anonymous namespace
-
-static MCInstrAnalysis *createSimpleInstrAnalysis(const MCInstrInfo *Info) {
-  return new SimpleMCInstrAnalysis(Info);
+  return new SimpleInstPrinter(MAI, MII, MRI);
 }
 
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSimpleTargetMC() {
   // Register the MC asm info.
   RegisterMCAsmInfo<SimpleMCAsmInfo> X(getTheSimpleTarget());
 
-  // Register the MC instruction info.
-  TargetRegistry::RegisterMCInstrInfo(getTheSimpleTarget(),
-                                      createSimpleMCInstrInfo);
-
-  // Register the MC register info.
-  TargetRegistry::RegisterMCRegInfo(getTheSimpleTarget(),
-                                    createSimpleMCRegisterInfo);
-
-  // Register the MC subtarget info.
-  TargetRegistry::RegisterMCSubtargetInfo(getTheSimpleTarget(),
-                                          createSimpleMCSubtargetInfo);
-
-  // Register the MC code emitter
-  TargetRegistry::RegisterMCCodeEmitter(getTheSimpleTarget(),
-                                        createSimpleMCCodeEmitter);
-
-  // Register the ASM Backend
-  TargetRegistry::RegisterMCAsmBackend(getTheSimpleTarget(),
-                                       createSimpleAsmBackend);
-
   // Register the MCInstPrinter.
   TargetRegistry::RegisterMCInstPrinter(getTheSimpleTarget(),
                                         createSimpleMCInstPrinter);
-
-  // Register the ELF streamer.
-  TargetRegistry::RegisterELFStreamer(getTheSimpleTarget(), createMCStreamer);
-
-  // Register the MC relocation info.
-  TargetRegistry::RegisterMCRelocationInfo(getTheSimpleTarget(),
-                                           createSimpleElfRelocation);
-
-  // Register the MC instruction analyzer.
-  TargetRegistry::RegisterMCInstrAnalysis(getTheSimpleTarget(),
-                                          createSimpleInstrAnalysis);
 }

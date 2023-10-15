@@ -26,14 +26,7 @@ class MCObjectTargetWriter;
 class MCSubtargetInfo;
 class Target;
 
-MCCodeEmitter *createSimpleMCCodeEmitter(const MCInstrInfo &MCII,
-                                        MCContext &Ctx);
-
-MCAsmBackend *createSimpleAsmBackend(const Target &T, const MCSubtargetInfo &STI,
-                                    const MCRegisterInfo &MRI,
-                                    const MCTargetOptions &Options);
-
-std::unique_ptr<MCObjectTargetWriter> createSimpleELFObjectWriter(uint8_t OSABI);
+extern Target TheSimpleTarget;
 } // namespace llvm
 
 // Defines symbolic names for Simple registers.  This defines a mapping from
@@ -43,7 +36,6 @@ std::unique_ptr<MCObjectTargetWriter> createSimpleELFObjectWriter(uint8_t OSABI)
 
 // Defines symbolic names for the Simple instructions.
 #define GET_INSTRINFO_ENUM
-#define GET_INSTRINFO_MC_HELPER_DECLS
 #include "SimpleGenInstrInfo.inc"
 
 #define GET_SUBTARGETINFO_ENUM
