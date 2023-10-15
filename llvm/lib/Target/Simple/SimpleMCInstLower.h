@@ -10,6 +10,7 @@
 #define LLVM_LIB_TARGET_SIMPLE_SIMPLEMCINSTLOWER_H
 
 #include "llvm/Support/Compiler.h"
+#include "llvm/CodeGen/MachineOperand.h"
 
 namespace llvm {
 class AsmPrinter;
@@ -23,6 +24,7 @@ class MachineOperand;
 // SimpleMCInstLower - This class is used to lower an MachineInstr
 // into an MCInst.
 class LLVM_LIBRARY_VISIBILITY SimpleMCInstLower {
+  typedef MachineOperand::MachineOperandType MachineOperandType;
   MCContext &Ctx;
 
   AsmPrinter &Printer;
@@ -31,13 +33,7 @@ public:
   SimpleMCInstLower(MCContext &CTX, AsmPrinter &AP) : Ctx(CTX), Printer(AP) {}
   void Lower(const MachineInstr *MI, MCInst &OutMI) const;
 
-  MCOperand LowerSymbolOperand(const MachineOperand &MO, MCSymbol *Sym) const;
-
-  MCSymbol *GetGlobalAddressSymbol(const MachineOperand &MO) const;
-  MCSymbol *GetBlockAddressSymbol(const MachineOperand &MO) const;
-  MCSymbol *GetExternalSymbolSymbol(const MachineOperand &MO) const;
-  MCSymbol *GetJumpTableSymbol(const MachineOperand &MO) const;
-  MCSymbol *GetConstantPoolIndexSymbol(const MachineOperand &MO) const;
+  MCOperand LowerOperand(const MachineOperand &MO, unsigned offset = 0) const;
 };
 } // namespace llvm
 

@@ -13,7 +13,6 @@
 
 #include "SimpleMCInstLower.h"
 
-#include "MCTargetDesc/SimpleBaseInfo.h"
 #include "MCTargetDesc/SimpleMCExpr.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/CodeGen/AsmPrinter.h"
@@ -29,108 +28,91 @@
 
 using namespace llvm;
 
-MCSymbol *
-SimpleMCInstLower::GetGlobalAddressSymbol(const MachineOperand &MO) const {
-  return Printer.getSymbol(MO.getGlobal());
-}
+// MCSymbol *
+// SimpleMCInstLower::GetGlobalAddressSymbol(const MachineOperand &MO) const {
+//   return Printer.getSymbol(MO.getGlobal());
+// }
 
-MCSymbol *
-SimpleMCInstLower::GetBlockAddressSymbol(const MachineOperand &MO) const {
-  return Printer.GetBlockAddressSymbol(MO.getBlockAddress());
-}
+// MCSymbol *
+// SimpleMCInstLower::GetBlockAddressSymbol(const MachineOperand &MO) const {
+//   return Printer.GetBlockAddressSymbol(MO.getBlockAddress());
+// }
 
-MCSymbol *
-SimpleMCInstLower::GetExternalSymbolSymbol(const MachineOperand &MO) const {
-  return Printer.GetExternalSymbolSymbol(MO.getSymbolName());
-}
+// MCSymbol *
+// SimpleMCInstLower::GetExternalSymbolSymbol(const MachineOperand &MO) const {
+//   return Printer.GetExternalSymbolSymbol(MO.getSymbolName());
+// }
 
-MCSymbol *SimpleMCInstLower::GetJumpTableSymbol(const MachineOperand &MO) const {
-  SmallString<256> Name;
-  raw_svector_ostream(Name) << Printer.MAI->getPrivateGlobalPrefix() << "JTI"
-                            << Printer.getFunctionNumber() << '_'
-                            << MO.getIndex();
-  // Create a symbol for the name.
-  return Ctx.getOrCreateSymbol(Name.str());
-}
+// MCSymbol *SimpleMCInstLower::GetJumpTableSymbol(const MachineOperand &MO) const {
+//   SmallString<256> Name;
+//   raw_svector_ostream(Name) << Printer.MAI->getPrivateGlobalPrefix() << "JTI"
+//                             << Printer.getFunctionNumber() << '_'
+//                             << MO.getIndex();
+//   // Create a symbol for the name.
+//   return Ctx.getOrCreateSymbol(Name.str());
+// }
 
-MCSymbol *
-SimpleMCInstLower::GetConstantPoolIndexSymbol(const MachineOperand &MO) const {
-  SmallString<256> Name;
-  raw_svector_ostream(Name) << Printer.MAI->getPrivateGlobalPrefix() << "CPI"
-                            << Printer.getFunctionNumber() << '_'
-                            << MO.getIndex();
-  // Create a symbol for the name.
-  return Ctx.getOrCreateSymbol(Name.str());
-}
+// MCSymbol *
+// SimpleMCInstLower::GetConstantPoolIndexSymbol(const MachineOperand &MO) const {
+//   SmallString<256> Name;
+//   raw_svector_ostream(Name) << Printer.MAI->getPrivateGlobalPrefix() << "CPI"
+//                             << Printer.getFunctionNumber() << '_'
+//                             << MO.getIndex();
+//   // Create a symbol for the name.
+//   return Ctx.getOrCreateSymbol(Name.str());
+// }
 
-MCOperand SimpleMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
-                                               MCSymbol *Sym) const {
-  SimpleMCExpr::VariantKind Kind;
+// MCOperand SimpleMCInstLower::LowerSymbolOperand(const MachineOperand &MO,
+//                                                MCSymbol *Sym) const {
+//   SimpleMCExpr::VariantKind Kind;
 
-  switch (MO.getTargetFlags()) {
-  case SimpleII::MO_NO_FLAG:
-    Kind = SimpleMCExpr::VK_Simple_None;
-    break;
-  case SimpleII::MO_ABS_HI:
-    Kind = SimpleMCExpr::VK_Simple_ABS_HI;
-    break;
-  case SimpleII::MO_ABS_LO:
-    Kind = SimpleMCExpr::VK_Simple_ABS_LO;
-    break;
-  default:
-    llvm_unreachable("Unknown target flag on GV operand");
+//   switch (MO.getTargetFlags()) {
+//   case SimpleII::MO_NO_FLAG:
+//     Kind = SimpleMCExpr::VK_Simple_None;
+//     break;
+//   case SimpleII::MO_ABS_HI:
+//     Kind = SimpleMCExpr::VK_Simple_ABS_HI;
+//     break;
+//   case SimpleII::MO_ABS_LO:
+//     Kind = SimpleMCExpr::VK_Simple_ABS_LO;
+//     break;
+//   default:
+//     llvm_unreachable("Unknown target flag on GV operand");
+//   }
+
+//   const MCExpr *Expr =
+//       MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, Ctx);
+//   if (!MO.isJTI() && MO.getOffset())
+//     Expr = MCBinaryExpr::createAdd(
+//         Expr, MCConstantExpr::create(MO.getOffset(), Ctx), Ctx);
+//   Expr = SimpleMCExpr::create(Kind, Expr, Ctx);
+//   return MCOperand::createExpr(Expr);
+// }
+
+MCOperand SimpleMCInstLower::LowerOperand(const MachineOperand &MO,
+                                         unsigned offset) const {
+  MachineOperandType MOTy = MO.getType();
+
+  switch (MOTy) 
+  {
+    default: llvm_unreachable("unknown operand type");
+    case MachineOperand::MO_Register:
+      return MCOperand::createReg(MO.getReg());
+    case MachineOperand::MO_Immediate:
+      return MCOperand::createImm(MO.getImm() + offset);
   }
 
-  const MCExpr *Expr =
-      MCSymbolRefExpr::create(Sym, MCSymbolRefExpr::VK_None, Ctx);
-  if (!MO.isJTI() && MO.getOffset())
-    Expr = MCBinaryExpr::createAdd(
-        Expr, MCConstantExpr::create(MO.getOffset(), Ctx), Ctx);
-  Expr = SimpleMCExpr::create(Kind, Expr, Ctx);
-  return MCOperand::createExpr(Expr);
+  return MCOperand();
 }
 
 void SimpleMCInstLower::Lower(const MachineInstr *MI, MCInst &OutMI) const {
   OutMI.setOpcode(MI->getOpcode());
 
-  for (const MachineOperand &MO : MI->operands()) {
-    MCOperand MCOp;
-    switch (MO.getType()) {
-    case MachineOperand::MO_Register:
-      // Ignore all implicit register operands.
-      if (MO.isImplicit())
-        continue;
-      MCOp = MCOperand::createReg(MO.getReg());
-      break;
-    case MachineOperand::MO_Immediate:
-      MCOp = MCOperand::createImm(MO.getImm());
-      break;
-    case MachineOperand::MO_MachineBasicBlock:
-      MCOp = MCOperand::createExpr(
-          MCSymbolRefExpr::create(MO.getMBB()->getSymbol(), Ctx));
-      break;
-    case MachineOperand::MO_RegisterMask:
-      continue;
-    case MachineOperand::MO_GlobalAddress:
-      MCOp = LowerSymbolOperand(MO, GetGlobalAddressSymbol(MO));
-      break;
-    case MachineOperand::MO_BlockAddress:
-      MCOp = LowerSymbolOperand(MO, GetBlockAddressSymbol(MO));
-      break;
-    case MachineOperand::MO_ExternalSymbol:
-      MCOp = LowerSymbolOperand(MO, GetExternalSymbolSymbol(MO));
-      break;
-    case MachineOperand::MO_JumpTableIndex:
-      MCOp = LowerSymbolOperand(MO, GetJumpTableSymbol(MO));
-      break;
-    case MachineOperand::MO_ConstantPoolIndex:
-      MCOp = LowerSymbolOperand(MO, GetConstantPoolIndexSymbol(MO));
-      break;
-    default:
-      MI->print(errs());
-      llvm_unreachable("unknown operand type");
-    }
+  for (unsigned i = 0, e = MI->getNumOperands(); i != e; ++i) {
+    const MachineOperand &MO = MI->getOperand(i);
+    MCOperand MCOp = LowerOperand(MO);
 
-    OutMI.addOperand(MCOp);
+    if (MCOp.isValid())
+      OutMI.addOperand(MCOp);
   }
 }
