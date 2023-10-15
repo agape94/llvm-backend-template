@@ -55,12 +55,6 @@
 
 using namespace llvm;
 
-// static cl::opt<int> SimpleLowerConstantMulThreshold(
-//     "simple-constant-mul-threshold", cl::Hidden,
-//     cl::desc("Maximum number of instruction to generate when lowering constant "
-//              "multiplication instead of calling library function [default=14]"),
-//     cl::init(14));
-
 SimpleTargetLowering::SimpleTargetLowering(const TargetMachine &TM,
                                          const SimpleSubtarget &STI)
     : TargetLowering(TM) {
