@@ -16,14 +16,12 @@ add_public_tablegen_target(SimpleCommonTableGen)
 
 add_llvm_target(SimpleCodeGen
   SimpleAsmPrinter.cpp
-  SimpleDelaySlotFiller.cpp
   SimpleFrameLowering.cpp
   SimpleInstrInfo.cpp
   SimpleISelDAGToDAG.cpp
   SimpleISelLowering.cpp
   SimpleMachineFunctionInfo.cpp
   SimpleMCInstLower.cpp
-  SimpleMemAluCombiner.cpp
   SimpleRegisterInfo.cpp
   SimpleSelectionDAGInfo.cpp
   SimpleSubtarget.cpp
