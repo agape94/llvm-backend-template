@@ -110,105 +110,18 @@ void SimpleAsmPrinter::printOperand(const MachineInstr *MI, int OpNum,
 // PrintAsmOperand - Print out an operand for an inline asm expression.
 bool SimpleAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                                       const char *ExtraCode, raw_ostream &O) {
-  // Does this asm operand have a single letter operand modifier?
-  if (ExtraCode && ExtraCode[0]) {
-    if (ExtraCode[1])
-      return true; // Unknown modifier.
-
-    switch (ExtraCode[0]) {
-    // The highest-numbered register of a pair.
-    case 'H': {
-      if (OpNo == 0)
-        return true;
-      const MachineOperand &FlagsOP = MI->getOperand(OpNo - 1);
-      if (!FlagsOP.isImm())
-        return true;
-      unsigned Flags = FlagsOP.getImm();
-      unsigned NumVals = InlineAsm::getNumOperandRegisters(Flags);
-      if (NumVals != 2)
-        return true;
-      unsigned RegOp = OpNo + 1;
-      if (RegOp >= MI->getNumOperands())
-        return true;
-      const MachineOperand &MO = MI->getOperand(RegOp);
-      if (!MO.isReg())
-        return true;
-      Register Reg = MO.getReg();
-      O << SimpleInstPrinter::getRegisterName(Reg);
-      return false;
-    }
-    default:
-      return AsmPrinter::PrintAsmOperand(MI, OpNo, ExtraCode, O);
-    }
-  }
   printOperand(MI, OpNo, O);
   return false;
 }
 
 //===----------------------------------------------------------------------===//
 void SimpleAsmPrinter::emitCallInstruction(const MachineInstr *MI) {
-  assert((MI->getOpcode() == Simple::CALL || MI->getOpcode() == Simple::CALLR) &&
-         "Unsupported call function");
-
-  SimpleMCInstLower MCInstLowering(OutContext, *this);
-  MCSubtargetInfo STI = getSubtargetInfo();
-  // Insert save rca instruction immediately before the call.
-  // TODO: We should generate a pc-relative mov instruction here instead
-  // of pc + 16 (should be mov .+16 %rca).
-  OutStreamer->emitInstruction(MCInstBuilder(Simple::ADD_I_LO)
-                                   .addReg(Simple::RCA)
-                                   .addReg(Simple::PC)
-                                   .addImm(16),
-                               STI);
-
-  // Push rca onto the stack.
-  //   st %rca, [--%sp]
-  OutStreamer->emitInstruction(MCInstBuilder(Simple::SW_RI)
-                                   .addReg(Simple::RCA)
-                                   .addReg(Simple::SP)
-                                   .addImm(-4)
-                                   .addImm(LPAC::makePreOp(LPAC::ADD)),
-                               STI);
-
-  // Lower the call instruction.
-  if (MI->getOpcode() == Simple::CALL) {
-    MCInst TmpInst;
-    MCInstLowering.Lower(MI, TmpInst);
-    TmpInst.setOpcode(Simple::BT);
-    OutStreamer->emitInstruction(TmpInst, STI);
-  } else {
-    OutStreamer->emitInstruction(MCInstBuilder(Simple::ADD_R)
-                                     .addReg(Simple::PC)
-                                     .addReg(MI->getOperand(0).getReg())
-                                     .addReg(Simple::R0)
-                                     .addImm(LPCC::ICC_T),
-                                 STI);
-  }
 }
 
 void SimpleAsmPrinter::customEmitInstruction(const MachineInstr *MI) {
-  SimpleMCInstLower MCInstLowering(OutContext, *this);
-  MCSubtargetInfo STI = getSubtargetInfo();
-  MCInst TmpInst;
-  MCInstLowering.Lower(MI, TmpInst);
-  OutStreamer->emitInstruction(TmpInst, STI);
 }
 
 void SimpleAsmPrinter::emitInstruction(const MachineInstr *MI) {
-  Simple_MC::verifyInstructionPredicates(MI->getOpcode(),
-                                        getSubtargetInfo().getFeatureBits());
-
-  MachineBasicBlock::const_instr_iterator I = MI->getIterator();
-  MachineBasicBlock::const_instr_iterator E = MI->getParent()->instr_end();
-
-  do {
-    if (I->isCall()) {
-      emitCallInstruction(&*I);
-      continue;
-    }
-
-    customEmitInstruction(&*I);
-  } while ((++I != E) && I->isInsideBundle());
 }
 
 // isBlockOnlyReachableByFallthough - Return true if the basic block has
@@ -217,26 +130,7 @@ void SimpleAsmPrinter::emitInstruction(const MachineInstr *MI) {
 // FIXME: could the overridden cases be handled in analyzeBranch?
 bool SimpleAsmPrinter::isBlockOnlyReachableByFallthrough(
     const MachineBasicBlock *MBB) const {
-  // The predecessor has to be immediately before this block.
-  const MachineBasicBlock *Pred = *MBB->pred_begin();
-
-  // If the predecessor is a switch statement, assume a jump table
-  // implementation, so it is not a fall through.
-  if (const BasicBlock *B = Pred->getBasicBlock())
-    if (isa<SwitchInst>(B->getTerminator()))
-      return false;
-
-  // Check default implementation
-  if (!AsmPrinter::isBlockOnlyReachableByFallthrough(MBB))
-    return false;
-
-  // Otherwise, check the last instruction.
-  // Check if the last terminator is an unconditional branch.
-  MachineBasicBlock::const_iterator I = Pred->end();
-  while (I != Pred->begin() && !(--I)->isTerminator()) {
-  }
-
-  return !I->isBarrier();
+return false;
 }
 
 // Force static initialization.
