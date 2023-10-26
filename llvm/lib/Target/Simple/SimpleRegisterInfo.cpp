@@ -32,11 +32,11 @@
 
 using namespace llvm;
 
-SimpleRegisterInfo::SimpleRegisterInfo() : SimpleGenRegisterInfo(Simple::RCA) {}
+SimpleRegisterInfo::SimpleRegisterInfo() : SimpleGenRegisterInfo(Simple::R0) {}
 
 const uint16_t *
 SimpleRegisterInfo::getCalleeSavedRegs(const MachineFunction * /*MF*/) const {
-  return CSR_SaveList;
+  return 0;
 }
 
 BitVector SimpleRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
@@ -52,5 +52,5 @@ bool SimpleRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
 
 Register
 SimpleRegisterInfo::getFrameRegister(const MachineFunction & /*MF*/) const {
-  return Simple::FP;
+  return Simple::R0;
 }
