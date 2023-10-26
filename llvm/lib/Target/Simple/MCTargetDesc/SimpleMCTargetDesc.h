@@ -27,6 +27,15 @@ class MCSubtargetInfo;
 class Target;
 
 extern Target TheSimpleTarget;
+
+MCCodeEmitter *createSimpleMCCodeEmitter(const MCInstrInfo &MCII,
+                                        MCContext &Ctx);
+
+MCAsmBackend *createSimpleAsmBackend(const Target &T, const MCSubtargetInfo &STI,
+                                    const MCRegisterInfo &MRI,
+                                    const MCTargetOptions &Options);
+
+std::unique_ptr<MCObjectTargetWriter> createSimpleELFObjectWriter(uint8_t OSABI);
 } // namespace llvm
 
 // Defines symbolic names for Simple registers.  This defines a mapping from
