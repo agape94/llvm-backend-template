@@ -37,16 +37,12 @@ def CallSeqStart     : SDNode<"ISD::CALLSEQ_START", SDT_SimpleCallSeqStart,
 def CallSeqEnd       : SDNode<"ISD::CALLSEQ_END", SDT_SimpleCallSeqEnd,
                               [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
 
-
-let Defs = [SP], Uses = [SP] in {
   def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                                 "#ADJCALLSTACKDOWN $amt1 $amt2",
                                 [(CallSeqStart timm:$amt1, timm:$amt2)]>;
   def ADJCALLSTACKUP   : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
                                 "#ADJCALLSTACKUP $amt1 $amt2",
                                 [(CallSeqEnd timm:$amt1, timm:$amt2)]>;
-}
-
 
 // -------------------------------------------------- //
 // Very Simple instruction set

@@ -28,7 +28,6 @@ def SimpleInstrInfo : InstrInfo;
 //===----------------------------------------------------------------------===//
 
 def : ProcessorModel<"generic", SimpleSchedModel, []>;
-def : ProcessorModel<"v11", SimpleSchedModel, []>;
 
 def SimpleInstPrinter : AsmWriter {
   string AsmWriterClassName  = "InstPrinter";
