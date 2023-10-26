@@ -115,11 +115,6 @@ bool SimpleAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 }
 
 //===----------------------------------------------------------------------===//
-void SimpleAsmPrinter::emitCallInstruction(const MachineInstr *MI) {
-}
-
-void SimpleAsmPrinter::customEmitInstruction(const MachineInstr *MI) {
-}
 
 void SimpleAsmPrinter::emitInstruction(const MachineInstr *MI) {
 }
