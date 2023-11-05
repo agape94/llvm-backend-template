@@ -8,7 +8,7 @@ tablegen(LLVM SimpleGenCallingConv.inc -gen-callingconv)
 tablegen(LLVM SimpleGenDAGISel.inc -gen-dag-isel)
 tablegen(LLVM SimpleGenDisassemblerTables.inc -gen-disassembler)
 tablegen(LLVM SimpleGenInstrInfo.inc -gen-instr-info)
-tablegen(LLVM SimpleGenMCCodeEmitter.inc -gen-emitter)
+# tablegen(LLVM SimpleGenMCCodeEmitter.inc -gen-emitter)
 tablegen(LLVM SimpleGenRegisterInfo.inc -gen-register-info)
 tablegen(LLVM SimpleGenSubtargetInfo.inc -gen-subtarget)
 

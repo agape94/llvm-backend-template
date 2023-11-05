@@ -3,7 +3,7 @@ add_llvm_component_library(LLVMSimpleDesc
   SimpleELFObjectWriter.cpp
   SimpleInstPrinter.cpp
   SimpleMCAsmInfo.cpp
-  SimpleMCCodeEmitter.cpp
+  # SimpleMCCodeEmitter.cpp
   SimpleMCExpr.cpp
   SimpleMCTargetDesc.cpp
 
