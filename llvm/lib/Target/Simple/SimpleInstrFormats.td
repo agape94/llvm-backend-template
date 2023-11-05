@@ -10,6 +10,9 @@ class InstSimple<dag outs, dag ins, string asmstr, list<dag> pattern>
     : Instruction {
   field bits<32> Inst;
 
+  bits<4> Opcode;
+  let Inst{31 - 28} = Opcode;
+
   let Namespace = "Simple";
   let DecoderNamespace = "Simple";
 

@@ -37,19 +37,33 @@ def CallSeqStart     : SDNode<"ISD::CALLSEQ_START", SDT_SimpleCallSeqStart,
 def CallSeqEnd       : SDNode<"ISD::CALLSEQ_END", SDT_SimpleCallSeqEnd,
                               [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue]>;
 
-  def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
-                                "#ADJCALLSTACKDOWN $amt1 $amt2",
-                                [(CallSeqStart timm:$amt1, timm:$amt2)]>;
-  def ADJCALLSTACKUP   : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
-                                "#ADJCALLSTACKUP $amt1 $amt2",
-                                [(CallSeqEnd timm:$amt1, timm:$amt2)]>;
+def ADJCALLSTACKDOWN : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                              "#ADJCALLSTACKDOWN $amt1 $amt2",
+                              [(CallSeqStart timm:$amt1, timm:$amt2)]>
+{
+  let Opcode = 0b0000;
+}
+
+def ADJCALLSTACKUP   : Pseudo<(outs), (ins i32imm:$amt1, i32imm:$amt2),
+                              "#ADJCALLSTACKUP $amt1 $amt2",
+                              [(CallSeqEnd timm:$amt1, timm:$amt2)]>
+{
+  let Opcode = 0b0001;
+}
+
 
 // -------------------------------------------------- //
 // Very Simple instruction set
 // -------------------------------------------------- //
  
-def AddRi : InstSimple<(outs GPR:$dst), (ins GPR:$b, i32imm:$c),
+def ADD_I : InstSimple<(outs GPR:$dst), (ins GPR:$b, i32imm:$c),
                       "assembly string for add register and imm32 instruction",
-                      [(set GPR:$dst, (add GPR:$b, imm:$c))]>;
+                      [(set GPR:$dst, (add GPR:$b, imm:$c))]>
+{
+  let Opcode = 0b1000;
+}
 
-def SimpleRet : InstSimple<(outs), (ins i32imm:$a), "return $a",[(SimpleRetNode imm:$a)]>;
+def RET : InstSimple<(outs), (ins i32imm:$a), "return $a",[(SimpleRetNode imm:$a)]>
+{
+  let Opcode = 0b1100;
+}
