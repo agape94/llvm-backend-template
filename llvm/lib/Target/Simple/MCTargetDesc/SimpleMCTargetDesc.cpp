@@ -47,11 +47,40 @@ static MCInstPrinter *createSimpleMCInstPrinter(const Triple & /*T*/,
   return new SimpleInstPrinter(MAI, MII, MRI);
 }
 
+static MCInstrInfo *createSimpleMCInstrInfo() {
+  MCInstrInfo *X = new MCInstrInfo();
+  InitSimpleMCInstrInfo(X);
+  return X;
+}
+
+static MCRegisterInfo *createSimpleMCRegisterInfo(const Triple & /*TT*/) {
+  MCRegisterInfo *X = new MCRegisterInfo();
+  InitSimpleMCRegisterInfo(X, Simple::R2, 0, 0, Simple::R0);
+  return X;
+}
+
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSimpleTargetMC() {
   // Register the MC asm info.
   RegisterMCAsmInfo<SimpleMCAsmInfo> X(getTheSimpleTarget());
 
+  // Register the MC instruction info.
+  TargetRegistry::RegisterMCInstrInfo(getTheSimpleTarget(),
+                                      createSimpleMCInstrInfo);
+
+  // Register the MC register info.
+  TargetRegistry::RegisterMCRegInfo(getTheSimpleTarget(),
+                                    createSimpleMCRegisterInfo);
+
+  // // Register the MC code emitter
+  // TargetRegistry::RegisterMCCodeEmitter(getTheSimpleTarget(),
+  //                                       createSimpleMCCodeEmitter);
+
+  // // Register the ASM Backend
+  // TargetRegistry::RegisterMCAsmBackend(getTheSimpleTarget(),
+  //                                      createSimpleAsmBackend);
+
   // Register the MCInstPrinter.
   TargetRegistry::RegisterMCInstPrinter(getTheSimpleTarget(),
                                         createSimpleMCInstPrinter);
+
 }
