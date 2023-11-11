@@ -25,6 +25,11 @@ namespace llvm {
 class SimpleTargetMachine : public LLVMTargetMachine {
   SimpleSubtarget Subtarget;
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
+  
+  SimpleInstrInfo InstrInfo;
+  SimpleTargetLowering TLInfo;
+  SimpleFrameLowering FrameLowering;
+
 
 public:
   SimpleTargetMachine(const Target &TheTarget, const Triple &TargetTriple,
@@ -55,6 +60,12 @@ public:
   bool isMachineVerifierClean() const override {
     return false;
   }
+
+  virtual const TargetRegisterInfo *getRegisterInfo() const 
+  {
+    return &InstrInfo.getRegisterInfo();
+  }
+  
 };
 } // namespace llvm
 

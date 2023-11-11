@@ -38,6 +38,17 @@ class SimpleSubtarget;
 class SimpleTargetLowering : public TargetLowering {
 public:
   SimpleTargetLowering(const TargetMachine &TM, const SimpleSubtarget &STI);
+  
+  const char *getTargetNodeName(unsigned Opcode) const override;
+  SDValue LowerFormalArguments(SDValue Chain, CallingConv::ID CallConv,
+                              bool IsVarArg,
+                              const SmallVectorImpl<ISD::InputArg> &Ins,
+                              const SDLoc &DL, SelectionDAG &DAG,
+                              SmallVectorImpl<SDValue> &InVals) const override;
+  SDValue LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
+                    const SmallVectorImpl<ISD::OutputArg> &Outs,
+                    const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
+                    SelectionDAG &DAG) const override;
 
   const SimpleRegisterInfo *TRI;
 };

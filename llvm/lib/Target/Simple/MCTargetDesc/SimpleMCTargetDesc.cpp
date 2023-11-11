@@ -47,6 +47,15 @@ static MCInstPrinter *createSimpleMCInstPrinter(const Triple & /*T*/,
   return new SimpleInstPrinter(MAI, MII, MRI);
 }
 
+static MCSubtargetInfo *
+createSimpleMCSubtargetInfo(const Triple &TT, StringRef CPU, StringRef FS) {
+  std::string CPUName = std::string(CPU);
+  if (CPUName.empty())
+    CPUName = "generic";
+
+  return createSimpleMCSubtargetInfoImpl(TT, CPUName, /*TuneCPU*/ CPUName, FS);
+}
+
 static MCInstrInfo *createSimpleMCInstrInfo() {
   MCInstrInfo *X = new MCInstrInfo();
   InitSimpleMCInstrInfo(X);
@@ -70,6 +79,10 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSimpleTargetMC() {
   // Register the MC register info.
   TargetRegistry::RegisterMCRegInfo(getTheSimpleTarget(),
                                     createSimpleMCRegisterInfo);
+
+  // Register the MC subtarget info.
+  TargetRegistry::RegisterMCSubtargetInfo(getTheSimpleTarget(),
+                                          createSimpleMCSubtargetInfo);
 
   // // Register the MC code emitter
   // TargetRegistry::RegisterMCCodeEmitter(getTheSimpleTarget(),

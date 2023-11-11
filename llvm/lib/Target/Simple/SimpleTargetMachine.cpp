@@ -65,8 +65,7 @@ SimpleTargetMachine::SimpleTargetMachine(
                         getEffectiveCodeModel(CodeModel, CodeModel::Medium),
                         OptLevel),
       Subtarget(TT, Cpu, FeatureString, *this, Options, getCodeModel(),
-                OptLevel),
-      TLOF(new SimpleTargetObjectFile()) {
+                OptLevel), TLOF(new SimpleTargetObjectFile()), TLInfo(*this, Subtarget), FrameLowering(Subtarget) {
   initAsmInfo();
 }
 

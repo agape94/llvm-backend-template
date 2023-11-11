@@ -55,6 +55,96 @@
 
 using namespace llvm;
 
+SDValue SimpleTargetLowering::LowerFormalArguments(
+    SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
+    const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
+    SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
+
+  // Implement really simple calling convention
+  // Every argument is passed through register
+  // If not enough registers - just fail
+
+  MachineFunction &MF = DAG.getMachineFunction();
+  MachineRegisterInfo &RegInfo = MF.getRegInfo();
+
+  if (Ins.size() >= Simple::GPRRegClass.getNumRegs())
+  {
+    assert(!"not implemented");
+    return SDValue();
+  }
+
+  SmallVector<SDValue, 4> ArgChains;
+
+  // Emit CopyFromReg's
+  for (unsigned i = 0, e = Ins.size(); i != e; ++i) 
+  {
+    if (Ins[i].VT.SimpleTy != MVT::i32)
+      assert(!"not implemented");
+
+    Register VReg = RegInfo.createVirtualRegister(&Simple::GPRRegClass);
+    RegInfo.addLiveIn(Simple::GPRRegClass.getRegister(i), VReg);
+    SDValue ArgIn = DAG.getCopyFromReg(Chain, DL, VReg, Ins[i].ArgVT);
+    InVals.push_back(ArgIn);
+    ArgChains.push_back(ArgIn.getValue(ArgIn->getNumValues() - 1));
+  }
+
+  // Return chain
+  // return DAG.getNode(ISD::TokenFactor, DL, MVT::Other, ArgChains);
+  return Chain;
+
+}
+
+SDValue SimpleTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
+    const SmallVectorImpl<ISD::OutputArg> &Outs,
+    const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
+    SelectionDAG &DAG) const  
+{
+  SDValue Flag;
+  SmallVector<SDValue, 4> RetOps(1, Chain);
+
+  if (Outs.size() >= Simple::GPRRegClass.getNumRegs())
+  {
+    assert(!"not implemented");
+    return SDValue();
+  }
+
+  // Return is always ret 0
+  RetOps.push_back(DAG.getConstant(0, DL, MVT::i32));
+
+  // Build CopyToReg's
+  for (unsigned i = 0; i != Outs.size(); ++i) 
+  {
+    if (Outs[i].VT.SimpleTy != MVT::i32)
+      assert(!"not implemented");
+
+    unsigned loc_reg = Simple::GPRRegClass.getRegister(i);
+
+    Chain = DAG.getCopyToReg(Chain, DL, loc_reg,
+      OutVals[i], Flag);
+
+    Flag = Chain.getValue(1);
+    RetOps.push_back(DAG.getRegister(loc_reg, Outs[i].VT));
+  }
+
+  RetOps[0] = Chain;  // Update chain.
+
+  // Add the flag if we have it.
+  if (Flag.getNode())
+    RetOps.push_back(Flag);
+
+  return DAG.getNode(SimpleISD::RET, DL, MVT::Other, RetOps);
+  // return Chain;
+}
+
+const char *SimpleTargetLowering::getTargetNodeName(unsigned Opcode) const
+{
+  switch (Opcode)
+  {
+  case SimpleISD::RET : return "Simple::RET";
+  default             : return NULL;
+  }
+}
+
 SimpleTargetLowering::SimpleTargetLowering(const TargetMachine &TM,
                                          const SimpleSubtarget &STI)
     : TargetLowering(TM) {

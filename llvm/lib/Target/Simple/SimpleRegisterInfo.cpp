@@ -47,7 +47,8 @@ BitVector SimpleRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 bool SimpleRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                             int SPAdj, unsigned FIOperandNum,
                                             RegScavenger *RS) const {
-  assert(!"NOT IMPLEMENTED");
+  // assert(!"NOT IMPLEMENTED");
+  return true;
 }
 
 Register

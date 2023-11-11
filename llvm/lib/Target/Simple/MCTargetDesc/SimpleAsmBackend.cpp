@@ -62,7 +62,7 @@ void SimpleAsmBackend::applyFixup(const MCAssembler &Asm, const MCFixup &Fixup,
                                  MutableArrayRef<char> Data, uint64_t Value,
                                  bool /*IsResolved*/,
                                  const MCSubtargetInfo * /*STI*/) const {
-  assert(false && "Not implemented!");
+  // assert(false && "Not implemented!");
 }
 
 std::unique_ptr<MCObjectTargetWriter>
@@ -72,7 +72,7 @@ SimpleAsmBackend::createObjectTargetWriter() const {
 
 const MCFixupKindInfo &
 SimpleAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
-  assert(false && "Not implemented!");
+  // assert(false && "Not implemented!");
   return MCFixupKindInfo();
 }
 

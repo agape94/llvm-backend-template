@@ -30,6 +30,7 @@
 #include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Target/TargetMachine.h"
+#include <iostream>
 
 using namespace llvm;
 
@@ -73,6 +74,7 @@ INITIALIZE_PASS(SimpleDAGToDAGISel, DEBUG_TYPE, PASS_NAME, false, false)
 // expanded, promoted and normal instructions
 void SimpleDAGToDAGISel::Select(SDNode *Node) {
   // Select the default instruction
+  std::cout << "SimpleDAGToDAGISel -> Node->getOperationName() = \n" << Node->getOperationName() << std::endl;
   SelectCode(Node);
 }
 
