@@ -18,7 +18,7 @@ let Namespace = "Simple" in {
 }
 
 // Integer registers
-foreach i = 0-4 in {
+foreach i = 0-6 in {
   def R#i : SimpleReg<"r"#i>, DwarfRegNum<[i]>;
 }
 

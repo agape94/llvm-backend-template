@@ -23,12 +23,12 @@ def CC_Simple32 : CallingConv<[
   CCIfNotVarArg<CCIfInReg<CCIfType<[i32],
                                    CCAssignToReg<[R2, R3, R4]>>>>,
 
-  // Otherwise they are assigned to the stack in 4-byte aligned units.
-  CCAssignToStack<4, 4>
+  // // Otherwise they are assigned to the stack in 4-byte aligned units.
+  // CCAssignToStack<4, 4>
 ]>;
 // Simple 32-bit C return-value convention.
 def RetCC_Simple32 : CallingConv<[
   // Specify two registers to allow returning 64-bit results that have already
   // been lowered to 2 32-bit values.
-  CCIfType<[i32], CCAssignToReg<[R0, R1]>>
+  CCIfType<[i32], CCAssignToReg<[R5, R6]>>
 ]>;
