@@ -89,8 +89,7 @@ SDValue SimpleTargetLowering::LowerFormalArguments(
   }
 
   // Return chain
-  // return DAG.getNode(ISD::TokenFactor, DL, MVT::Other, ArgChains);
-  return Chain;
+  return DAG.getMergeValues(ArgChains, DL);
 
 }
 
@@ -132,8 +131,8 @@ SDValue SimpleTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallCon
   if (Flag.getNode())
     RetOps.push_back(Flag);
 
-  return DAG.getNode(SimpleISD::RET, DL, MVT::Other, RetOps);
-  // return Chain;
+  // return chain
+  return DAG.getMergeValues(RetOps, DL);
 }
 
 const char *SimpleTargetLowering::getTargetNodeName(unsigned Opcode) const
