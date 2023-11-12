@@ -1,1 +1,0 @@
-STRING_EXTENSION_OUTSIDE(SBMemoryRegionInfo)

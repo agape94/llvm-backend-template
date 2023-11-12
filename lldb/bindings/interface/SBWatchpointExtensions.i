@@ -1,1 +1,0 @@
-STRING_EXTENSION_LEVEL_OUTSIDE(SBWatchpoint, lldb::eDescriptionLevelVerbose)
