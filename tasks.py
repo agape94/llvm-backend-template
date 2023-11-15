@@ -1,96 +1,149 @@
 from invoke import task
 import git
 import os
-import replaceString 
 import wget
 import zipfile
+import shutil
+from replaceString import search_replace_in_directory
 
 
-class Progress(git.remote.RemoteProgress):
-    def update(self, op_code, cur_count, max_count=None, message=''):
-        # print(f"update({op_code}, {cur_count}, {max_count}, {message})")
-        print(self._cur_line)
-
-LLVM_REPO='https://github.com/llvm/llvm-project.git'
 LLVM_SUPPORTED_VERSION="17.0.2"
+LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{LLVM_SUPPORTED_VERSION}.zip"
 
-def download_and_extract_release(extract_path, target_name="Simple"):
-  LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{LLVM_SUPPORTED_VERSION}.zip"
-  print(f"Downloading LLVM {LLVM_SUPPORTED_VERSION} from https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{LLVM_SUPPORTED_VERSION}.zip ...")
-  file = wget.download(LLVM_RELEASE_LINK, out="/tmp", bar=None)
-  if file is None:
-      print(f"Encountered errors when downloading the LLVM release.");
-      return False
-  print(f"Succesfully downloaded {file}")
-  
-  print(f"Extracting {file} ...")
-  with zipfile.ZipFile(file, 'r') as zip_ref:
-      zip_ref.extractall(extract_path)
-  print(f"Succesfully extracted {file} to {extract_path}")
+# ==================================================================================================================
 
-  print("Cleaning up ...")
-  # Try to delete the zip file.
-  try:
-      os.remove(file)
-  except OSError as e:
-    # If it fails, inform the user.
-    print("Error: %s - %s." % (e.filename, e.strerror))
-  
-  print("Renaming folder")
-  zip_file_name = os.path.basename(file)
-  print(f"zip_file_name = {zip_file_name}")
+def info (msg):
+  print(f"INFO: {msg}")
 
-  extract_folder_name = zip_file_name.rsplit('.')[0] 
-  print(f"extract_folder_name = {extract_folder_name}")
+def error (msg):
+  print(f"ERROR: {msg}")
+
+# ==================================================================================================================
+
+def download_and_extract_release(extract_path, repo_name, cleanup=False):
   
+  extract_folder_name = f"llvm-project-llvmorg-{LLVM_SUPPORTED_VERSION}"
+  zip_file_name = f"{extract_folder_name}.zip"
+  temp_zip_path = os.path.join("/tmp", zip_file_name)
   extract_folder_path = os.path.join(extract_path, extract_folder_name)
-  print(f"extract_folder_path = {extract_folder_path}")
+  
+  if os.path.exists(temp_zip_path):
+    info(f"{temp_zip_path} already exists, skipping download")
+  else:
+    info(f"Downloading LLVM release from {LLVM_RELEASE_LINK} ...")
+    temp_zip_path = wget.download(LLVM_RELEASE_LINK, out="/tmp", bar=None)
+    if temp_zip_path is None:
+        error(f"Encountered errors when downloading the LLVM release.");
+        return False
+    info(f"Succesfully downloaded {temp_zip_path}")
+  
+  info(f"Extracting {temp_zip_path} ...")
+  with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
+      zip_ref.extractall(extract_path)
+  info(f"Succesfully extracted {temp_zip_path} to {extract_path}")
 
-  env_folder_name = f"llvm_{target_name}"
-  print(f"env_folder_name = {env_folder_name}")
-
-  env_folder_path = os.path.join(extract_path, env_folder_name)
-  print(f"env_folder_path = {env_folder_path}")
-
-  input("Press Enter to rename folder...")
+  if cleanup:
+    info(f"Cleaning up ...")
+    # Try to delete the zip file.
+    try:
+        os.remove(temp_zip_path)
+    except OSError as e:
+      # If it fails, inform the user.
+      error(f"{e.filename} - {e.strerror}")
+  
+  info(f"Renaming folder")
+  
+  env_folder_path = os.path.join(extract_path, repo_name)
 
   os.rename(extract_folder_path, env_folder_path)
   return True
 
-@task(aliases = ['se'])
-def setup_llvm_environment(c, target_name="Simple", path="./"):
-  download_and_extract_release(extract_path=path)
-   
+# ==================================================================================================================
 
-@task(aliases=['st'], help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips"})
-def setup_target(c, target_name="Simple", clone_path="."):
-  """
-  Set up the environment in order to develop a new LLVM Backend for the given target name
-  Clones the LLVM project repository to the given path and creates the template target inside the `llvm/lib/Target` folder
-  """
-  print(f"Setting up target... {target_name}")
-  env_path = os.path.abspath(clone_path)
-  print(f"Cloning LLVM project in {env_path}")
-
-  # if os.path.isdir(env_path) and 
-
-  with os.scandir(env_path) as enviroment:
-    if any(enviroment):
-        print(f'Repository folder not empty. Skipping to checking out LLVM-{LLVM_SUPPORTED_VERSION}')
-        repo = git.Repo(os.path.join(env_path, "llvm-project")) 
-        repo.git.checkout("main")
-        repo.remote().pull(progress=Progress());
-    else:
-      repo = git.Repo.clone_from(LLVM_REPO, env_path, progress=Progress())
-  print(f"Checked out llvm-project ({repo.remotes[0].url}) into {env_path}/llvm-project")
-
+def copy_directory_recursively(src, dst):
   
-  for tag in repo.tags:
-    if LLVM_SUPPORTED_VERSION in tag.name:
-      llvm_version = tag.name
-      break;
+  # Copy the content of
+  # source to destination
+  try:
+    shutil.copytree(src, dst)
+  except OSError as err:
+    # print("Error: % s" % err)
+    error(f"{err}")
+    return False
+  return True
 
-  repo.git.checkout(llvm_version)
+# ==================================================================================================================
 
-  # print(f"Checked out LLVM version: {str()}")
+def check_arguments(target_name, path):
+  if not target_name[0].isupper():
+    error(f"Please provide a valid target name (upper case and camel case when applicable)")
+    return False
+  
+  if not os.path.isdir(path) :
+    error(f"Please provide a valid path for the new backend")
+    return False
+  
+  repo_name = f"llvm-{target_name.lower()}-backend"
+  new_backend_path = os.path.join(path, repo_name)
+  
+  if os.path.exists(new_backend_path) and len(os.listdir(new_backend_path)) != 0:
+    error(f"Directory {new_backend_path} is not empty. ")
+    return False
+  
+  return True
+
+# ==================================================================================================================
+
+@task(aliases = ['se'], 
+      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
+            "path" : "Location on disk where the new environment will be placed",
+            "init_repo" : "True by default. A git repository will be initialized in the new folder and initial commits will be added"})
+def setup_new_environment(c, target_name, path, init_repo=True):
+  """
+  Set up the environment in order to develop a new LLVM Backend for the given target name. Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. The script also sets up a git repository, unless `init_repo` is False
+  """
+  if not check_arguments(target_name, path):
+    return
+  
+  info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
+  
+  repo_name = f"llvm-{target_name.lower()}-backend"
+  environment_path = os.path.join(path, repo_name)
+
+  # download LLVM release
+  ok = download_and_extract_release(extract_path=path, repo_name=repo_name)
+  if not ok:
+    return
+  
+  if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
+    error(f"Something went wrong during archive extraction")
+    return
+  
+  if init_repo:
+    info(f"Initializing repository ... ")
+    repo = git.Repo.init(path)
+    repo.index.add(environment_path)
+
+    info(f"Adding initial commit ")
+    repo.index.commit(f"Add LLVM-{LLVM_SUPPORTED_VERSION} release")
+  
+  # copy the template folder to the given location
+  template_path = "./Simple"
+  target_folder_path = os.path.join(environment_path, f"llvm/lib/Target/{target_name}")
+  info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
+  ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
+  if not ok:
+    return
+  
+  # replace all occurences of "Simple" with the given target name
+  info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
+  if target_name != "Simple":
+    search_replace_in_directory(target_folder_path, target_name)
+    if init_repo:
+      repo.index.add(target_folder_path)
+      repo.index.commit(f"Add initial commit for target {target_name}")
+  
+  info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
+
+# ==================================================================================================================
 
