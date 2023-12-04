@@ -178,3 +178,23 @@ def setup_new_environment(c, target_name, path, llvm_only=True, init_repo=True, 
 
 # ==================================================================================================================
 
+@task(aliases = ['ntf'], 
+      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
+            "path" : "Location on disk where the new environment will be placed"})
+def create_new_target_folder(c, target_name, path):
+  """
+  Creates a Target folder based on the template with the given name and also replaces all occurences of "Simple" with
+  the target name
+  """
+  
+  if not check_arguments(target_name, path):
+    return
+  template_path="./Simple"
+  target_folder_path = f"./{target_name}"
+  ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
+  if not ok:
+    return
+  # replace all occurences of "Simple" with the given target name
+  info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
+  if target_name != "Simple":
+    search_replace_in_directory(target_folder_path, target_name)
