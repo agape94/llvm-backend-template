@@ -4,7 +4,8 @@ import os
 import wget
 import zipfile
 import shutil
-from replaceString import search_replace_in_directory
+from replaceString import *
+from compileTasks import *
 
 
 LLVM_SUPPORTED_VERSION="17.0.2"
@@ -74,6 +75,11 @@ def copy_directory_recursively(src, dst):
 
 # ==================================================================================================================
 
+def copy_file(src, dst):
+  shutil.copyfile(src, dst)
+
+# ==================================================================================================================
+
 def check_arguments(target_name, path):
   if not target_name[0].isupper():
     error(f"Please provide a valid target name (upper case and camel case when applicable)")
@@ -97,8 +103,10 @@ def check_arguments(target_name, path):
 @task(aliases = ['se'], 
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
             "path" : "Location on disk where the new environment will be placed",
-            "init_repo" : "True by default. A git repository will be initialized in the new folder and initial commits will be added"})
-def setup_new_environment(c, target_name, path, init_repo=True):
+            "init_repo" : "True by default. A git repository will be initialized in the new folder and initial commits will be added",
+            "build": "Whether or not to start compiling the target after setting up the environment",
+            "llvm_only": "Whether to only extract the"})
+def setup_new_environment(c, target_name, path, llvm_only=True, init_repo=True, build=True):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. The script also sets up a git repository, unless `init_repo` is False
   """
@@ -121,8 +129,11 @@ def setup_new_environment(c, target_name, path, init_repo=True):
   
   if init_repo:
     info(f"Initializing repository ... ")
-    repo = git.Repo.init(path)
-    repo.index.add(environment_path)
+    repo = git.Repo.init(environment_path)
+    repo.index.add(f"{environment_path}/*")
+    repo.index.add(f"{environment_path}/.*")
+    repo.index.add(f"{environment_path}/llvm")
+    repo.index.add(f"{environment_path}/lld")
 
     info(f"Adding initial commit ")
     repo.index.commit(f"Add LLVM-{LLVM_SUPPORTED_VERSION} release")
@@ -139,9 +150,29 @@ def setup_new_environment(c, target_name, path, init_repo=True):
   info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
   if target_name != "Simple":
     search_replace_in_directory(target_folder_path, target_name)
-    if init_repo:
-      repo.index.add(target_folder_path)
-      repo.index.commit(f"Add initial commit for target {target_name}")
+  if init_repo:
+    repo.index.add(target_folder_path)
+    repo.index.commit(f"Add template folder for target {target_name}")
+  
+  info(f"Add new target to LLVM build system")
+  project_root = os.path.realpath(__file__).rsplit('/', 1)[0]
+  
+  template_patch_file_path = f"{project_root}/addTargetToLLVM.patch"
+  new_patch_file_path = f"{project_root}/add{target_name}ToLLVM.patch"
+  copy_file(template_patch_file_path, new_patch_file_path)
+  
+  search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
+                                "Simple", target_name,
+                                "SIMPLE", target_name.upper())
+  
+  repo.git.apply(['-3', new_patch_file_path])
+  repo.index.add(environment_path)
+  repo.index.commit(f"Add target {target_name} to LLVM build system")
+
+  info(f"Building the '{target_name}' target ... ")
+
+  if build:
+    build_target(c, target_name)
   
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
