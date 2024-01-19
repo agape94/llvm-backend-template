@@ -157,8 +157,8 @@ def setup_new_environment(c, target_name, path, llvm_only=True, init_repo=True, 
   info(f"Add new target to LLVM build system")
   project_root = os.path.realpath(__file__).rsplit('/', 1)[0]
   
-  template_patch_file_path = f"{project_root}/addTargetToLLVM.patch"
-  new_patch_file_path = f"{project_root}/add{target_name}ToLLVM.patch"
+  template_patch_file_path = f"{project_root}/patches/addTargetToLLVM.patch"
+  new_patch_file_path = f"{project_root}/patches/add{target_name}ToLLVM.patch"
   copy_file(template_patch_file_path, new_patch_file_path)
   
   search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
