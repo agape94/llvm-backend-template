@@ -25,9 +25,8 @@ build:       # This job runs in the build stage, which runs first.
   stage: build
   before_script:
     - echo "Installing Python"
-    - apt -qq update && apt -qq install -y python
     - apt -qq update
-    - apt -qq install -y python python-virtualenv python-pip
+    - apt -qq install -y python3 python-virtualenv python-pip
     - virtualenv venv
     - . venv/bin/activate
     - python -V
