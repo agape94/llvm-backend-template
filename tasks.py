@@ -1,5 +1,5 @@
 from invoke import task
-import git
+import subprocess
 import os
 import wget
 import zipfile
@@ -68,7 +68,6 @@ def copy_directory_recursively(src, dst):
   try:
     shutil.copytree(src, dst)
   except OSError as err:
-    # print("Error: % s" % err)
     error(f"{err}")
     return False
   return True
@@ -79,6 +78,24 @@ def copy_file(src, dst):
   shutil.copyfile(src, dst)
 
 # ==================================================================================================================
+# GIT HELPER FUNCTIONS
+
+def git_init():
+  subprocess.run(["git", "init"])
+
+def git_add(path):
+  subprocess.run(["git", "add", f"{path}"])
+
+def git_add_all():
+  subprocess.run(["git", "add", "-A"])
+
+def git_commit(message):
+  subprocess.run(["git", "commit", "-m", message, "-q"])
+
+def git_apply_patch(patch):
+  subprocess.run(["git", "apply", f"{patch}"])
+
+# ==================================================================================================================
 
 def check_arguments(target_name, path, arch):
   if not target_name[0].isupper():
@@ -86,8 +103,7 @@ def check_arguments(target_name, path, arch):
     return False
   
   if not os.path.isdir(path) :
-    error(f"Please provide a valid path for the new backend")
-    return False
+    os.mkdir(path)
 
   if not arch in {8, 16, 32, 64} :
     error(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
@@ -108,9 +124,8 @@ def check_arguments(target_name, path, arch):
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
             "path": "Location on disk where the new environment will be placed",
             "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
-            "init_repo" : "True by default. A git repository will be initialized in the new folder and initial commits will be added",
             "build": "True by default. Whether or not to start compiling the target after setting up the environment"})
-def setup_new_environment(c, target_name, path, arch=32, init_repo=True, build=True):
+def setup_new_environment(c, target_name, path, arch=32, build=True):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. 
   Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
@@ -124,6 +139,7 @@ def setup_new_environment(c, target_name, path, arch=32, init_repo=True, build=T
   
   repo_name = f"llvm-{target_name.lower()}-backend"
   environment_path = os.path.join(path, repo_name)
+  project_root = os.getcwd()
 
   # download LLVM release
   ok = download_and_extract_release(extract_path=path, repo_name=repo_name)
@@ -134,19 +150,16 @@ def setup_new_environment(c, target_name, path, arch=32, init_repo=True, build=T
     error(f"Something went wrong during archive extraction")
     return
   
-  if init_repo:
-    info(f"Initializing repository ... ")
-    repo = git.Repo.init(environment_path)
-    repo.index.add(f"{environment_path}/*")
-    repo.index.add(f"{environment_path}/.*")
-    repo.index.add(f"{environment_path}/llvm")
-    repo.index.add(f"{environment_path}/lld")
+  info(f"Initializing repository ... ")
+  os.chdir(environment_path)
+  git_init()
+  git_add_all()
 
-    info(f"Adding initial commit ")
-    repo.index.commit(f"Add LLVM-{LLVM_SUPPORTED_VERSION} release")
+  info(f"Adding initial commit ")
+  git_commit(f"Add LLVM-{LLVM_SUPPORTED_VERSION} release")
   
   # copy the template folder to the given location
-  template_path = "./Simple"
+  template_path = os.path.join(project_root, "Simple")
   target_folder_path = os.path.join(environment_path, f"llvm/lib/Target/{target_name}")
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
@@ -157,51 +170,33 @@ def setup_new_environment(c, target_name, path, arch=32, init_repo=True, build=T
   info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
   if target_name != "Simple":
     search_replace_in_directory(target_folder_path, target_name)
-  if init_repo:
-    repo.index.add(target_folder_path)
-    repo.index.commit(f"Add template folder for target {target_name}")
+  
+  git_add(target_folder_path)
+  git_commit(f"Add template folder for target {target_name}")
   
   info(f"Add new target to LLVM build system")
-  project_root = os.path.realpath(__file__).rsplit('/', 1)[0]
   
-  template_patch_file_path = f"{project_root}/patches/addTargetToLLVM.patch"
-  new_patch_file_path = f"{project_root}/patches/add{target_name}ToLLVM.patch"
+  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}BitSimpleTarget.patch")
+  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLVM.patch")
   copy_file(template_patch_file_path, new_patch_file_path)
   
   search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
                                 "Simple", target_name,
                                 "SIMPLE", target_name.upper())
   
-  repo.git.apply(['-3', new_patch_file_path])
-  repo.index.add(environment_path)
-  repo.index.commit(f"Add target {target_name} to LLVM build system")
+  git_apply_patch(new_patch_file_path)
+  git_add(environment_path)
+  git_commit(f"Add target {target_name} to LLVM build system")
 
-  info(f"Building the '{target_name}' target ... ")
+  os.remove(new_patch_file_path)
 
-  if build:
-    build_target(c, target_name)
+  copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
+  git_add(os.path.join(environment_path, "compileTasks.py"))
+  git_commit("Add compile invoke task to the new environment")
+
+  os.chdir(project_root)
   
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
-# ==================================================================================================================
-
-@task(aliases = ['ntf'], 
-      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
-            "path" : "Location on disk where the new environment will be placed"})
-def create_new_target_folder(c, target_name, path):
-  """
-  Creates a Target folder based on the template with the given name and also replaces all occurences of "Simple" with
-  the target name
-  """
-  
-  if not check_arguments(target_name, path):
-    return
-  template_path="./Simple"
-  target_folder_path = f"./{target_name}"
-  ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
-  if not ok:
-    return
-  # replace all occurences of "Simple" with the given target name
-  info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
-  if target_name != "Simple":
-    search_replace_in_directory(target_folder_path, target_name)
+  if build:
+    build_target(c, target_name, environment_dir=environment_path)
