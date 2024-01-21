@@ -80,13 +80,17 @@ def copy_file(src, dst):
 
 # ==================================================================================================================
 
-def check_arguments(target_name, path):
+def check_arguments(target_name, path, arch):
   if not target_name[0].isupper():
     error(f"Please provide a valid target name (upper case and camel case when applicable)")
     return False
   
   if not os.path.isdir(path) :
     error(f"Please provide a valid path for the new backend")
+    return False
+
+  if not arch in {8, 16, 32, 64} :
+    error(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
     return False
   
   repo_name = f"llvm-{target_name.lower()}-backend"
@@ -102,15 +106,18 @@ def check_arguments(target_name, path):
 
 @task(aliases = ['se'], 
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
-            "path" : "Location on disk where the new environment will be placed",
+            "path": "Location on disk where the new environment will be placed",
+            "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
             "init_repo" : "True by default. A git repository will be initialized in the new folder and initial commits will be added",
-            "build": "Whether or not to start compiling the target after setting up the environment",
-            "llvm_only": "Whether to only extract the"})
-def setup_new_environment(c, target_name, path, llvm_only=True, init_repo=True, build=True):
+            "build": "True by default. Whether or not to start compiling the target after setting up the environment"})
+def setup_new_environment(c, target_name, path, arch=32, init_repo=True, build=True):
   """
-  Set up the environment in order to develop a new LLVM Backend for the given target name. Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. The script also sets up a git repository, unless `init_repo` is False
+  Set up the environment in order to develop a new LLVM Backend for the given target name. 
+  Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
+  The script also sets up a git repository, unless `init_repo` is False. 
+  After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
   """
-  if not check_arguments(target_name, path):
+  if not check_arguments(target_name, path, arch):
     return
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
