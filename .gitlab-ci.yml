@@ -33,6 +33,6 @@ build:       # This job runs in the build stage, which runs first.
     - pip install invoke wget
   script:
     - echo "Compiling the code..."
-    - python -m invoke se -p ~/temp/llvm-template-test -t Simple
+    - python -m invoke se -p /home/temp/llvm-template-test -t Simple
     - echo "Compile complete."
 
