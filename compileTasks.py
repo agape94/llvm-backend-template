@@ -29,11 +29,11 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
 
   if not target_name[0].isupper():
     error(f"Please provide a valid target name (upper case and camel case when applicable)")
-    return
+    return -1
 
   if not os.path.exists(environment_dir) or len(os.listdir(environment_dir)) == 0:
     error(f"{environment_dir} is empty or doesn't exist")
-    return
+    return -1
 
   build_dir = os.path.join(environment_dir, f'build_{target_name}')
 
@@ -83,6 +83,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
       process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
     else:
       process = subprocess.Popen(build_command, shell=True)
+      return -1
 
   # Wait for the subprocess to complete
   process.wait()
@@ -92,8 +93,10 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     info("Built succesfully!")
   else:
     error(f"The build has failed. Please check the log file for more information.")
+    return -1
 
   os.chdir(environment_dir)
+  return 0
   
   
 # ==================================================================================================================

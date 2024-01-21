@@ -134,7 +134,7 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
   """
   if not check_arguments(target_name, path, arch):
-    return
+    return -1
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
   
@@ -145,11 +145,11 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   # download LLVM release
   ok = download_and_extract_release(extract_path=path, repo_name=repo_name)
   if not ok:
-    return
+    return -1
   
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     error(f"Something went wrong during archive extraction")
-    return
+    return -1
   
   info(f"Initializing repository ... ")
   os.chdir(environment_path)
@@ -165,7 +165,7 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
   if not ok:
-    return
+    return -1
   
   # replace all occurences of "Simple" with the given target name
   info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
@@ -200,4 +200,5 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
   if build:
-    build_target(c, target_name, environment_dir=environment_path, log_file=log_file)
+    if build_target(c, target_name, environment_dir=environment_path, log_file=log_file) != 0:
+      return -1
