@@ -30,7 +30,7 @@ build:       # This job runs in the build stage, which runs first.
     - virtualenv venv
     - . venv/bin/activate
     - python -V
-    - pip install invoke
+    - pip install invoke wget
   script:
     - echo "Compiling the code..."
     - python -m invoke se -p ~/temp/llvm-template-test -t Simple
