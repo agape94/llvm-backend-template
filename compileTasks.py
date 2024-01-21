@@ -54,7 +54,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     if log_file:
       process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
     else:
-      process = subprocess.Popen(cmake_command, shell=True)
+      process = subprocess.Popen(cmake_command)
   
   # Wait for the subprocess to complete
   process.wait()
@@ -64,11 +64,12 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     info("Configured succesfully.")
   else:
     error(f"Configure step failed. Logs are available here: {build_log_file}")
+    return - 1
 
   os.chdir(build_dir)
 
   cores = multiprocessing.cpu_count()
-  build_command = f'ninja -j {cores - 2}'
+  build_command = f'ninja -j {cores - 2 if cores > 4 else cores - 1}'
     
   info(f"Build command: {build_command}")
   info(f"Building target {target_name} ...")
@@ -82,8 +83,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     if log_file:
       process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
     else:
-      process = subprocess.Popen(build_command, shell=True)
-      return -1
+      process = subprocess.Popen(build_command)
 
   # Wait for the subprocess to complete
   process.wait()

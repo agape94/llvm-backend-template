@@ -202,3 +202,4 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   if build:
     if build_target(c, target_name, environment_dir=environment_path, log_file=log_file) != 0:
       return -1
+  return 0
