@@ -31,6 +31,9 @@ build:       # This job runs in the build stage, which runs first.
     - . venv/bin/activate
     - python -V
     - pip install invoke wget
+    - git config --global user.email "gitlab@ci-homer.local"
+    - git config --global user.name "ci-homer local"
+    - git config --global init.defaultBranch main
   script:
     - echo "Compiling the code..."
     - inv se -p /tmp/llvm-template-test -t Simple --no-log-file

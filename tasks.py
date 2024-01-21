@@ -192,7 +192,7 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   os.remove(new_patch_file_path)
 
   copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
-  git_add(os.path.join(environment_path, "compileTasks.py"))
+  git_add(os.path.join(environment_path, "tasks.py"))
   git_commit("Add compile invoke task to the new environment")
 
   os.chdir(project_root)
