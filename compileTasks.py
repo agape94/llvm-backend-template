@@ -54,7 +54,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     if log_file:
       process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
     else:
-      process = subprocess.Popen(cmake_command)
+      process = subprocess.Popen(cmake_command, shell=True)
   
   # Wait for the subprocess to complete
   process.wait()
@@ -83,7 +83,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     if log_file:
       process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
     else:
-      process = subprocess.Popen(build_command)
+      process = subprocess.Popen(build_command, shell=True)
 
   # Wait for the subprocess to complete
   process.wait()
