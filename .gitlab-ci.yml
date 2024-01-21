@@ -26,13 +26,13 @@ build:       # This job runs in the build stage, which runs first.
   before_script:
     - echo "Installing Python"
     - apt -qq update
-    - apt -qq install -y python3 python3-virtualenv python3-pip
+    - apt -qq install -y python3 python3-virtualenv python3-pip ninja-build 
     - virtualenv venv
     - . venv/bin/activate
     - python -V
     - pip install invoke wget
   script:
     - echo "Compiling the code..."
-    - python -m invoke se -p /home/temp/llvm-template-test -t Simple
+    - python -m invoke se -p /tmp/llvm-template-test -t Simple --no-log-file
     - echo "Compile complete."
 
