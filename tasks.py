@@ -124,8 +124,9 @@ def check_arguments(target_name, path, arch):
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
             "path": "Location on disk where the new environment will be placed",
             "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
-            "build": "True by default. Whether or not to start compiling the target after setting up the environment"})
-def setup_new_environment(c, target_name, path, arch=32, build=True):
+            "build": "True by default. Whether or not to start compiling the target after setting up the environment",
+            "log_file": "Whether to place the build logs in the log file or not. By default True"})
+def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=True):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. 
   Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
@@ -199,4 +200,4 @@ def setup_new_environment(c, target_name, path, arch=32, build=True):
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
   if build:
-    build_target(c, target_name, environment_dir=environment_path)
+    build_target(c, target_name, environment_dir=environment_path, log_file=log_file)

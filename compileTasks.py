@@ -20,8 +20,9 @@ def error (msg):
              "build_type": "Possible values: Debug, Release",
              "clang": "If true, Clang will be built as well",
              "upstream_targets": "List of upstream targets to build, Strings separated by ',' (comma). By default it is None. Example: Lanai,ARM,RISCV",
-             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash."})
-def build_target(c, target_name, environment_dir=".", upstream_targets="", build_type="Debug", clang=True, parallel_link_jobs=2):
+             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
+             "log_file": "Whether to place the build logs in the log file or not. By default True"})
+def build_target(c, target_name, environment_dir=".", upstream_targets="", build_type="Debug", clang=True, parallel_link_jobs=2, log_file=True):
   """
     Build the given target
   """
@@ -50,7 +51,10 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
 
   # Open a file for writing the output
   with open(build_log_file, "w") as file:
-    process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
+    if log_file:
+      process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
+    else:
+      process = subprocess.Popen(cmake_command, shell=True)
   
   # Wait for the subprocess to complete
   process.wait()
@@ -68,13 +72,17 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     
   info(f"Build command: {build_command}")
   info(f"Building target {target_name} ...")
-  info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
-  info(f"The build logs are available here: {build_log_file}")
+  
+  if log_file:
+    info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
+    info(f"The build logs are available here: {build_log_file}")
 
   # Open a file for writing the output
   with open(build_log_file, "a") as file:
-    # Open a subprocess and redirect the standard output to the file
-    process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
+    if log_file:
+      process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
+    else:
+      process = subprocess.Popen(build_command, shell=True)
 
   # Wait for the subprocess to complete
   process.wait()
