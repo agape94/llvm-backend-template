@@ -25,14 +25,14 @@ def download_and_extract_release(extract_path, repo_name, cleanup=False):
   
   extract_folder_name = f"llvm-project-llvmorg-{LLVM_SUPPORTED_VERSION}"
   zip_file_name = f"{extract_folder_name}.zip"
-  temp_zip_path = os.path.join("/tmp", zip_file_name)
+  temp_zip_path = os.path.join(os.getcwd(), zip_file_name)
   extract_folder_path = os.path.join(extract_path, extract_folder_name)
   
   if os.path.exists(temp_zip_path):
     info(f"{temp_zip_path} already exists, skipping download")
   else:
     info(f"Downloading LLVM release from {LLVM_RELEASE_LINK} ...")
-    temp_zip_path = wget.download(LLVM_RELEASE_LINK, out="/tmp", bar=None)
+    temp_zip_path = wget.download(LLVM_RELEASE_LINK, out=os.getcwd(), bar=None)
     if temp_zip_path is None:
         error(f"Encountered errors when downloading the LLVM release.");
         return False
