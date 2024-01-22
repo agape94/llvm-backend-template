@@ -16,13 +16,14 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Getting-Started.gitlab-ci.yml
 
+image: ubuntu-22.04
 stages:          # List of stages for jobs, and their order of execution
   - build
 
 build:       # This job runs in the build stage, which runs first.
   tags:
     - linux-homer
-  stage: build
+  stage: build_stage
   before_script:
     - echo "Installing Python"
     - apt -qq update
@@ -38,4 +39,8 @@ build:       # This job runs in the build stage, which runs first.
     - echo "Compiling the code..."
     - inv se -p /tmp/llvm-template-test -t Simple --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
+  cache:
+    key: $CI_COMMIT_REF_SLUG
+    paths:
+      - build_*/*
 
