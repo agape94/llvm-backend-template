@@ -36,6 +36,6 @@ build:       # This job runs in the build stage, which runs first.
     - git config --global init.defaultBranch main
   script:
     - echo "Compiling the code..."
-    - inv se -p /tmp/llvm-template-test -t Simple --no-log-file
+    - inv se -p /tmp/llvm-template-test -t Simple --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
 
