@@ -41,5 +41,5 @@ build:       # This job runs in the build stage, which runs first.
   cache:
     key: $CI_COMMIT_REF_SLUG
     paths:
-      - build_*/*
+      - ./*
 
