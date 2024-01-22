@@ -26,7 +26,7 @@ build:       # This job runs in the build stage, which runs first.
   before_script:
     - echo "Installing Python"
     - apt -qq update
-    - apt -qq install -y python3 python3-virtualenv python3-pip ninja-build git cmake build-essential
+    - apt -qq install -y python3 python3-virtualenv python3-pip ninja-build git cmake build-essential llvm lld
     - virtualenv venv
     - . venv/bin/activate
     - python -V
