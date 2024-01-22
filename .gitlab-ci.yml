@@ -18,7 +18,7 @@
 
 image: ubuntu-22.04
 stages:          # List of stages for jobs, and their order of execution
-  - build
+  - build_stage
 
 build:       # This job runs in the build stage, which runs first.
   tags:
