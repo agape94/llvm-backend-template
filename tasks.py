@@ -161,7 +161,7 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   
   # copy the template folder to the given location
   template_path = os.path.join(project_root, "Simple")
-  target_folder_path = os.path.join(environment_path, f"llvm/lib/Target/{target_name}")
+  target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
   if not ok:
