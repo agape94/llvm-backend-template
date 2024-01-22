@@ -28,6 +28,8 @@
 
 # Nested build directory
 /build*
+/llvm-*-backend
+/CI-build
 
 #==============================================================================#
 # Explicit files to ignore (only matches one).
