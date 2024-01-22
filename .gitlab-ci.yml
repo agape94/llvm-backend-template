@@ -38,6 +38,13 @@ build:       # This job runs in the build stage, which runs first.
     - echo "Compiling the code..."
     - inv se -p /tmp/llvm-template-test -t Simple --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
+    - echo "CI Project Dir:"
+    - echo $CI_PROJECT_DIR
+    - ls -al
+    - echo "Build Simple Directory:"
+    - ls build_Simple
+    - echo "Sleep..."
+    - sleep 10s
   cache:
     key: $CI_COMMIT_REF_SLUG
     paths:
