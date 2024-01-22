@@ -34,8 +34,7 @@ def download_and_extract_release(extract_path, repo_name, cleanup=False):
     info(f"Downloading LLVM release from {LLVM_RELEASE_LINK} ...")
     temp_zip_path = wget.download(LLVM_RELEASE_LINK, out=os.getcwd(), bar=None)
     if temp_zip_path is None:
-        error(f"Encountered errors when downloading the LLVM release.");
-        return False
+        raise RuntimeError(f"Encountered errors when downloading the LLVM release.")
     info(f"Succesfully downloaded {temp_zip_path}")
   
   info(f"Extracting {temp_zip_path} ...")
@@ -57,20 +56,12 @@ def download_and_extract_release(extract_path, repo_name, cleanup=False):
   env_folder_path = os.path.join(extract_path, repo_name)
 
   os.rename(extract_folder_path, env_folder_path)
-  return True
 
 # ==================================================================================================================
 
 def copy_directory_recursively(src, dst):
-  
-  # Copy the content of
-  # source to destination
-  try:
+    # this call will raise an exception if something goes wrong
     shutil.copytree(src, dst)
-  except OSError as err:
-    error(f"{err}")
-    return False
-  return True
 
 # ==================================================================================================================
 
@@ -99,24 +90,19 @@ def git_apply_patch(patch):
 
 def check_arguments(target_name, path, arch):
   if not target_name[0].isupper():
-    error(f"Please provide a valid target name (upper case and camel case when applicable)")
-    return False
+    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
   
   if not os.path.isdir(path) :
     os.mkdir(path)
 
   if not arch in {8, 16, 32, 64} :
-    error(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
-    return False
+    raise ValueError(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
   
   repo_name = f"llvm-{target_name.lower()}-backend"
   new_backend_path = os.path.join(path, repo_name)
   
   if os.path.exists(new_backend_path) and len(os.listdir(new_backend_path)) != 0:
-    error(f"Directory {new_backend_path} is not empty. ")
-    return False
-  
-  return True
+    raise OSError(f"Directory {new_backend_path} is not empty. ")
 
 # ==================================================================================================================
 
@@ -125,16 +111,16 @@ def check_arguments(target_name, path, arch):
             "path": "Location on disk where the new environment will be placed",
             "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
             "build": "True by default. Whether or not to start compiling the target after setting up the environment",
+            "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
             "log_file": "Whether to place the build logs in the log file or not. By default True"})
-def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=True):
+def setup_new_environment(c, target_name, path, arch=32, build=True, parallel_link_jobs=2, log_file=True):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. 
   Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
   The script also sets up a git repository, unless `init_repo` is False. 
   After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
   """
-  if not check_arguments(target_name, path, arch):
-    return -1
+  check_arguments(target_name, path, arch)
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
   
@@ -143,13 +129,10 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   project_root = os.getcwd()
 
   # download LLVM release
-  ok = download_and_extract_release(extract_path=path, repo_name=repo_name)
-  if not ok:
-    return -1
+  download_and_extract_release(extract_path=path, repo_name=repo_name)
   
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
-    error(f"Something went wrong during archive extraction")
-    return -1
+    raise OSError(f"Something went wrong during archive extraction")
   
   info(f"Initializing repository ... ")
   os.chdir(environment_path)
@@ -163,9 +146,7 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   template_path = os.path.join(project_root, "Simple")
   target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
-  ok = copy_directory_recursively(src=template_path, dst=target_folder_path)
-  if not ok:
-    return -1
+  copy_directory_recursively(src=template_path, dst=target_folder_path)
   
   # replace all occurences of "Simple" with the given target name
   info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
@@ -200,6 +181,4 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, log_file=Tr
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
   if build:
-    if build_target(c, target_name, environment_dir=environment_path, log_file=log_file) != 0:
-      return -1
-  return 0
+    build_target(c, target_name, environment_dir=environment_path, log_file=log_file, parallel_link_jobs=parallel_link_jobs)

@@ -28,12 +28,10 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   """
 
   if not target_name[0].isupper():
-    error(f"Please provide a valid target name (upper case and camel case when applicable)")
-    return -1
+    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
 
   if not os.path.exists(environment_dir) or len(os.listdir(environment_dir)) == 0:
-    error(f"{environment_dir} is empty or doesn't exist")
-    return -1
+    raise ValueError(f"{environment_dir} is empty or doesn't exist")
 
   build_dir = os.path.join(environment_dir, f'build_{target_name}')
 
@@ -63,8 +61,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   if process.returncode == 0:
     info("Configured succesfully.")
   else:
-    error(f"Configure step failed. Logs are available here: {build_log_file}")
-    return - 1
+    raise Exception("Configure step failed." + f"Logs are available here: {build_log_file}" if log_file else "")
 
   os.chdir(build_dir)
 
@@ -73,9 +70,9 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     
   info(f"Build command: {build_command}")
   info(f"Building target {target_name} ...")
+  info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
   
   if log_file:
-    info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
     info(f"The build logs are available here: {build_log_file}")
 
   # Open a file for writing the output
@@ -92,11 +89,6 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   if process.returncode == 0:
     info("Built succesfully!")
   else:
-    error(f"The build has failed. Please check the log file for more information.")
-    return -1
+    raise Exception("The build has failed." + f"Please check the log file for more information: {build_log_file}" if log_file else "")
 
   os.chdir(environment_dir)
-  return 0
-  
-  
-# ==================================================================================================================
