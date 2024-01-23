@@ -40,9 +40,6 @@ build:       # This job runs in the build stage, which runs first.
     - echo "Compile complete."
     - echo "CI Project Dir:"
     - echo $CI_PROJECT_DIR
-    - ls -al
-    - echo "Build Simple Directory:"
-    - ls ../CI-build/llvm-simple-backend/build_Simple/*
   cache:
     key: $CI_COMMIT_REF_SLUG
     paths:
