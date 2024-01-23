@@ -2,6 +2,7 @@ from invoke import task
 import os
 import multiprocessing
 import subprocess
+import shutil
 from datetime import datetime
 
 # ==================================================================================================================
@@ -33,7 +34,16 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   if not os.path.exists(environment_dir) or len(os.listdir(environment_dir)) == 0:
     raise ValueError(f"{environment_dir} is empty or doesn't exist")
 
-  build_dir = os.path.join(environment_dir, f'build_{target_name}')
+  build_dir_name = f'build_{target_name}'
+  build_dir = os.path.join(environment_dir, build_dir_name)
+
+  if os.environ['CI'] is not None:
+    print("XXXXXXXXXXX We are in CI mode!")
+    ci_project_path = os.environ['CI_PROJECT_DIR']
+    ci_build_path = os.environ['CI_BUILDS_DIR']
+    if os.path.exists(os.path.join(ci_project_path, build_dir_name)):
+      print("XXXXXXXXXXX We have cache. Let's copy it.")
+      shutil.copytree(os.path.join(ci_project_path, build_dir_name), os.path.join(ci_build_path, build_dir_name))
 
   if not os.path.exists(f'{build_dir}'):
     os.mkdir(f'{build_dir}')

@@ -52,5 +52,5 @@ cleanup:
     - linux-homer-non-docker
   script:
     - echo "Cleaning up"
-    - rm -fr $CI_BUILDS_DIR
+    - rm -fr $CI_BUILDS_DIR/*
 
