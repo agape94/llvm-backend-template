@@ -38,13 +38,10 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   build_dir = os.path.join(environment_dir, build_dir_name)
 
   if os.environ['CI'] is not None:
-    print("XXXXXXXXXXX We are in CI mode!")
+    print("We are in CI mode. Try to copy the cache build folder if it exists...")
     ci_project_path = os.environ['CI_PROJECT_DIR']
     ci_build_path = os.environ['CI_BUILDS_DIR']
     if os.path.exists(os.path.join(ci_project_path, build_dir_name)):
-      print("XXXXXXXXXXX We have cache. Let's copy it.")
-      print(f"Project path: {ci_project_path}")
-      print(f"Build path: {ci_build_path}")
       shutil.move(os.path.join(ci_project_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{target_name.lower()}-backend/{build_dir_name}"))
 
   if not os.path.exists(f'{build_dir}'):
@@ -74,35 +71,33 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     info("Configured succesfully.")
   else:
     raise Exception("Configure step failed." + f"Logs are available here: {build_log_file}" if log_file else "")
-  
-  # Comment out the build step just to test the CI caching
 
-  # os.chdir(build_dir)
+  os.chdir(build_dir)
 
-  # cores = multiprocessing.cpu_count()
-  # build_command = f'ninja -j {cores - 2 if cores > 4 else cores - 1}'
+  cores = multiprocessing.cpu_count()
+  build_command = f'ninja -j {cores - 2 if cores > 4 else cores - 1}'
     
-  # info(f"Build command: {build_command}")
-  # info(f"Building target {target_name} ...")
-  # info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
+  info(f"Build command: {build_command}")
+  info(f"Building target {target_name} ...")
+  info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
   
-  # if log_file:
-  #   info(f"The build logs are available here: {build_log_file}")
+  if log_file:
+    info(f"The build logs are available here: {build_log_file}")
 
-  # # Open a file for writing the output
-  # with open(build_log_file, "a") as file:
-  #   if log_file:
-  #     process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
-  #   else:
-  #     process = subprocess.Popen(build_command, shell=True)
+  # Open a file for writing the output
+  with open(build_log_file, "a") as file:
+    if log_file:
+      process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
+    else:
+      process = subprocess.Popen(build_command, shell=True)
 
-  # # Wait for the subprocess to complete
-  # process.wait()
+  # Wait for the subprocess to complete
+  process.wait()
 
-  # # Check if the command was successful (return code 0)
-  # if process.returncode == 0:
-  #   info("Built succesfully!")
-  # else:
-  #   raise Exception("The build has failed." + f"Please check the log file for more information: {build_log_file}" if log_file else "")
+  # Check if the command was successful (return code 0)
+  if process.returncode == 0:
+    info("Built succesfully!")
+  else:
+    raise Exception("The build has failed." + f"Please check the log file for more information: {build_log_file}" if log_file else "")
 
   os.chdir(environment_dir)
