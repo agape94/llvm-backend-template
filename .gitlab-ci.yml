@@ -39,7 +39,7 @@ build:       # This job runs in the build stage, which runs first.
     - echo "Compiling the code..."
     - inv se -p /build -t Simple --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
-    - [-d $CI_BUILDS_DIR/llvm-simple-backend/build_Simple] && mv $CI_BUILDS_DIR/llvm-simple-backend/build_Simple $CI_PROJECT_DIR/build_Simple
+    - mv $CI_BUILDS_DIR/llvm-simple-backend/build_Simple $CI_PROJECT_DIR/build_Simple
   cache:
     key: $CI_COMMIT_REF_SLUG
     paths:
