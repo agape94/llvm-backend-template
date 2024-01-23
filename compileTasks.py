@@ -45,7 +45,7 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
       print("XXXXXXXXXXX We have cache. Let's copy it.")
       print(f"Project path: {ci_project_path}")
       print(f"Build path: {ci_build_path}")
-      shutil.move(os.path.join(ci_project_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{target_name}-backend/{build_dir_name}"))
+      shutil.move(os.path.join(ci_project_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{target_name.lower()}-backend/{build_dir_name}"))
 
   if not os.path.exists(f'{build_dir}'):
     os.mkdir(f'{build_dir}')
