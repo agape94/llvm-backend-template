@@ -36,12 +36,12 @@ build:       # This job runs in the build stage, which runs first.
     - git config --global init.defaultBranch main
   script:
     - echo "Compiling the code..."
-    - inv se -p . -t Simple --no-log-file --parallel-link-jobs=1
+    - inv se -p /build -t Simple --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
     - echo "CI Project Dir:"
     - echo $CI_PROJECT_DIR
   cache:
     key: $CI_COMMIT_REF_SLUG
     paths:
-      - build_Simple/*
+      - /build/build_Simple/*
 
