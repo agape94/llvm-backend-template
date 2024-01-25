@@ -37,12 +37,12 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   build_dir_name = f'build_{target_name}'
   build_dir = os.path.join(environment_dir, build_dir_name)
 
-  if os.environ['CI'] is not None:
+  if os.getenv('CI') is not None:
+    # I decided to implement my own caching solution because the official one is way too slow when the build folder is very large (like it is for LLVM)
     print("We are in CI mode. Try to copy the cache build folder if it exists...")
-    ci_project_path = os.environ['CI_PROJECT_DIR']
-    ci_build_path = os.environ['CI_BUILDS_DIR']
-    if os.path.exists(os.path.join(ci_project_path, build_dir_name)):
-      shutil.move(os.path.join(ci_project_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{target_name.lower()}-backend/{build_dir_name}"))
+    ci_build_path = os.getenv('CI_BUILDS_DIR')
+    if os.path.exists(os.path.join(ci_build_path, build_dir_name)):
+      shutil.move(os.path.join(ci_build_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{target_name.lower()}-backend/{build_dir_name}"))
 
   if not os.path.exists(f'{build_dir}'):
     os.mkdir(f'{build_dir}')
@@ -99,5 +99,12 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
     info("Built succesfully!")
   else:
     raise Exception("The build has failed." + f"Please check the log file for more information: {build_log_file}" if log_file else "")
+  
+  if os.getenv('CI') is not None:
+    # Copy the build folder back
+    print("CI: Copy the build folder into the cache location")
+    ci_build_path = os.getenv('CI_BUILDS_DIR')
+    if os.path.exists(os.path.join(ci_build_path, build_dir_name)):
+      shutil.move(os.path.join(ci_build_path, f"llvm-{target_name.lower()}-backend/{build_dir_name}"), os.path.join(ci_build_path, build_dir_name))
 
   os.chdir(environment_dir)
