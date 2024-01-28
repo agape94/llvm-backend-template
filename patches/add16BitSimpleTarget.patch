@@ -20,6 +20,14 @@ diff --git a/llvm/include/llvm/BinaryFormat/ELF.h b/llvm/include/llvm/BinaryForm
 index f5a7cdb38..8db4ebfe0 100644
 --- a/llvm/include/llvm/BinaryFormat/ELF.h
 +++ b/llvm/include/llvm/BinaryFormat/ELF.h
+@@ -157,7 +157,6 @@ enum {
+   EM_ALPHA = 41,         // DEC Alpha
+   EM_SH = 42,            // Hitachi SH
+   EM_SPARCV9 = 43,       // SPARC V9
+-  EM_TRICORE = 44,       // Siemens TriCore
+   EM_ARC = 45,           // Argonaut RISC Core
+   EM_H8_300 = 46,        // Hitachi H8/300
+   EM_H8_300H = 47,       // Hitachi H8/300H
 @@ -320,6 +320,7 @@ enum {
    EM_VE = 251,            // NEC SX-Aurora VE
    EM_CSKY = 252,          // C-SKY 32-bit processor
@@ -103,6 +111,14 @@ diff --git a/llvm/lib/BinaryFormat/ELF.cpp b/llvm/lib/BinaryFormat/ELF.cpp
 index dc8f3051a..8ac79fb1c 100644
 --- a/llvm/lib/BinaryFormat/ELF.cpp
 +++ b/llvm/lib/BinaryFormat/ELF.cpp
+@@ -44,7 +44,6 @@ uint16_t ELF::convertArchNameToEMachine(StringRef Arch) {
+       .Case("alpha", EM_ALPHA)
+       .Case("sh", EM_SH)
+       .Case("sparcv9", EM_SPARCV9)
+-      .Case("tricore", EM_TRICORE)
+       .Case("arc", EM_ARC)
+       .Case("h8_300", EM_H8_300)
+       .Case("h8_300h", EM_H8_300H)
 @@ -194,6 +194,7 @@ uint16_t ELF::convertArchNameToEMachine(StringRef Arch) {
        .Case("amdgpu", EM_AMDGPU)
        .Case("riscv", EM_RISCV)
@@ -111,6 +127,15 @@ index dc8f3051a..8ac79fb1c 100644
        .Case("bpf", EM_BPF)
        .Case("ve", EM_VE)
        .Case("csky", EM_CSKY)
+@@ -259,8 +258,6 @@ StringRef ELF::convertEMachineToArchName(uint16_t EMachine) {
+     return "sh";
+   case EM_SPARCV9:
+     return "sparcv9";
+-  case EM_TRICORE:
+-    return "tricore";
+   case EM_ARC:
+     return "arc";
+   case EM_H8_300:
 @@ -556,6 +557,8 @@ StringRef ELF::convertEMachineToArchName(uint16_t EMachine) {
      return "riscv";
    case EM_LANAI:
