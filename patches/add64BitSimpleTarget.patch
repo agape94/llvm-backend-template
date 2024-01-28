@@ -207,6 +207,14 @@ diff --git a/llvm/lib/ObjectYAML/ELFYAML.cpp b/llvm/lib/ObjectYAML/ELFYAML.cpp
 index e92c61d81..44283899d 100644
 --- a/llvm/lib/ObjectYAML/ELFYAML.cpp
 +++ b/llvm/lib/ObjectYAML/ELFYAML.cpp
+@@ -219,7 +219,6 @@ void ScalarEnumerationTraits<ELFYAML::ELF_EM>::enumeration(
+   ECase(EM_ALPHA);
+   ECase(EM_SH);
+   ECase(EM_SPARCV9);
+-  ECase(EM_TRICORE);
+   ECase(EM_ARC);
+   ECase(EM_H8_300);
+   ECase(EM_H8_300H);
 @@ -351,6 +351,7 @@ void ScalarEnumerationTraits<ELFYAML::ELF_EM>::enumeration(
    ECase(EM_AMDGPU);
    ECase(EM_RISCV);
