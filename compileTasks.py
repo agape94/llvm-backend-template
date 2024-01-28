@@ -56,11 +56,11 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   
   build_log_file = os.path.join(environment_dir, f"build-{target_name}-{build_type}-{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
 
-  # Open a file for writing the output
-  with open(build_log_file, "w") as file:
-    if log_file:
+  if log_file:
+    # Open a file for writing the output
+    with open(build_log_file, "w") as file:
       process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
-    else:
+  else:
       process = subprocess.Popen(cmake_command, shell=True)
   
   # Wait for the subprocess to complete
@@ -84,12 +84,12 @@ def build_target(c, target_name, environment_dir=".", upstream_targets="", build
   if log_file:
     info(f"The build logs are available here: {build_log_file}")
 
-  # Open a file for writing the output
-  with open(build_log_file, "a") as file:
-    if log_file:
+  if log_file:
+    # Open a file for writing the output
+    with open(build_log_file, "a") as file:
       process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
-    else:
-      process = subprocess.Popen(build_command, shell=True)
+  else:
+    process = subprocess.Popen(build_command, shell=True)
 
   # Wait for the subprocess to complete
   process.wait()
