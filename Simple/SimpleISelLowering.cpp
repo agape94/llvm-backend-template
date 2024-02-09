@@ -75,7 +75,7 @@ const char *SimpleTargetLowering::getTargetNodeName(unsigned Opcode) const
 {
   switch (Opcode)
   {
-  case SimpleISD::RET : return "Simple::RET";
+  case SimpleISD::RET : return "SIMPLE::RET";
   default             : return NULL;
   }
 }
@@ -85,7 +85,7 @@ SimpleTargetLowering::SimpleTargetLowering(const TargetMachine &TM,
     : TargetLowering(TM) 
 {
   // Set up the register classes.
-  addRegisterClass(MVT::i32, &Simple::GPRRegClass);
+  addRegisterClass(MVT::i32, &SIMPLE::GPRRegClass);
 
   // Compute derived properties from the register classes
   TRI = STI.getRegisterInfo();

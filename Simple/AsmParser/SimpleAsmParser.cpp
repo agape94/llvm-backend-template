@@ -206,7 +206,7 @@ public:
 
 bool SimpleAsmParser::parseRegister(MCRegister &RegNum, SMLoc &StartLoc,
                                    SMLoc &EndLoc) {
-  return MatchRegisterName(Lexer.getTok().getIdentifier()) == Simple::R0;
+  return MatchRegisterName(Lexer.getTok().getIdentifier()) == SIMPLE::R0;
 }
 
 OperandMatchResultTy SimpleAsmParser::tryParseRegister(MCRegister &RegNum,

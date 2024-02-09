@@ -27,5 +27,5 @@ using namespace llvm;
 #include "SimpleGenInstrInfo.inc"
 
 SimpleInstrInfo::SimpleInstrInfo()
-    : SimpleGenInstrInfo(Simple::ADJCALLSTACKDOWN, Simple::ADJCALLSTACKUP),
+    : SimpleGenInstrInfo(SIMPLE::ADJCALLSTACKDOWN, SIMPLE::ADJCALLSTACKUP),
       RegisterInfo() {}

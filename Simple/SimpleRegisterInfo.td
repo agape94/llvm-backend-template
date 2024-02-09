@@ -9,29 +9,40 @@
 //===----------------------------------------------------------------------===//
 
 // Registers are identified with 5-bit ID numbers.
-class SimpleReg<string n> : Register<n> {
-  let Namespace = "Simple";
+class SimpleReg<bits<5> Enc, string n> : Register<n> {
+  let HWEncoding{15-5} = 0;
+  let HWEncoding{4-0} = Enc;
+  let Namespace = "SIMPLE";
 }
 
-let Namespace = "Simple" in {
+let Namespace = "SIMPLE" in {
   def sub_32 : SubRegIndex<32>;
 }
 
 // Integer registers
-foreach i = 0-6 in {
-  def R#i : SimpleReg<"r"#i>, DwarfRegNum<[i]>;
+foreach i = 0-31 in {
+  def R#i : SimpleReg<i, "r"#i>, DwarfRegNum<[i]>;
 }
 
-// // Define a status register to capture the dependencies between the set flag
-// // and setcc instructions
-// def SR : SimpleReg< 0, "sw">;
-
 // Register classes.
-def GPR : RegisterClass<"Simple", [i32], 32,
-    (add R0, R1, R2, R3, R4)>;
+class SimpleRegisterClass<list<ValueType> types, int size,
+                          int alignment, dag regList, int copyCost = 1>
+    : RegisterClass <"SIMPLE", types, alignment, regList> {
+      let Size = size;
+      let CopyCost = copyCost;
+}
 
-// // Condition code register class
-// def CCR : RegisterClass<"Simple", [i32], 32, (add SR)> {
-//   let CopyCost = -1; // Don't allow copying of status registers
-//   let isAllocatable = 0;
-// }
+def GPR : SimpleRegisterClass <[i32, f32], 32, 32, (add (sequence "R%u", 0, 31))>;
+
+// Register operands
+class SimpleRegisterOperand<RegisterClass RC> : RegisterOperand<RC>
+{
+  let DecoderMethod = "decode"#RC#"RegisterClass";
+}
+
+def GPROperand : SimpleRegisterOperand<GPR>
+{
+  // Add specifics for certain registers here ...
+  // Ex: If R0 is a constant register and always returns 0, we would specify this as following
+  // let GIZeroRegister = R0;
+}

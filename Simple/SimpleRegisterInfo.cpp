@@ -32,15 +32,17 @@
 
 using namespace llvm;
 
-SimpleRegisterInfo::SimpleRegisterInfo() : SimpleGenRegisterInfo(Simple::R0) {}
+SimpleRegisterInfo::SimpleRegisterInfo() : SimpleGenRegisterInfo(SIMPLE::R0) {}
 
 const uint16_t *
 SimpleRegisterInfo::getCalleeSavedRegs(const MachineFunction * /*MF*/) const {
-  return 0;
+  return nullptr;
 }
 
 BitVector SimpleRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
+  Reserved.set(SIMPLE::R0);
+  // Add more registers that should be reserved
   return Reserved;
 }
 
@@ -48,10 +50,10 @@ bool SimpleRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                             int SPAdj, unsigned FIOperandNum,
                                             RegScavenger *RS) const {
   // assert(!"NOT IMPLEMENTED");
-  return true;
+  return false;
 }
 
 Register
 SimpleRegisterInfo::getFrameRegister(const MachineFunction & /*MF*/) const {
-  return Simple::R0;
+  return SIMPLE::R0;
 }

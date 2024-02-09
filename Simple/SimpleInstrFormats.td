@@ -13,8 +13,8 @@ class InstSimple<dag outs, dag ins, string asmstr, list<dag> pattern>
   bits<4> Opcode;
   let Inst{31 - 28} = Opcode;
 
-  let Namespace = "Simple";
-  let DecoderNamespace = "Simple";
+  let Namespace = "SIMPLE";
+  let DecoderNamespace = "SIMPLE";
 
   dag OutOperandList = outs;
   dag InOperandList = ins;

@@ -63,7 +63,7 @@ def ADD_I : InstSimple<(outs GPR:$dst), (ins GPR:$b, i32imm:$c),
   let Opcode = 0b1000;
 }
 
-def RET : InstSimple<(outs), (ins i32imm:$a), "return $a",[(SimpleRetNode imm:$a)]>
+def RET : InstSimple<(outs), (ins GPR:$a), "return $a",[(SimpleRetNode GPR:$a)]>
 {
   let Opcode = 0b1100;
 }
