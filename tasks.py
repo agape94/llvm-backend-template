@@ -172,6 +172,21 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, parallel_li
 
   os.remove(new_patch_file_path)
 
+  info(f"Add new target to Clang build system")
+  template_patch_file_path = os.path.join(project_root, "patches", f"addTargetToClang.patch")
+  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToClang.patch")
+  copy_file(template_patch_file_path, new_patch_file_path)
+
+  search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
+                                "Simple", target_name,
+                                "SIMPLE", target_name.upper())
+
+  git_apply_patch(new_patch_file_path)
+  git_add(environment_path)
+  git_commit(f"Add target {target_name} to Clang build system")
+
+  os.remove(new_patch_file_path)
+
   copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
   git_add(os.path.join(environment_path, "tasks.py"))
   git_commit("Add compile invoke task to the new environment")

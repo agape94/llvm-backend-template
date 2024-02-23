@@ -20,7 +20,7 @@ def error (msg):
              "environment_dir": "Path to llvm source root. By default the current directory is considered",
              "build_type": "Possible values: Debug, Release",
              "clang": "If true, Clang will be built as well",
-             "upstream_targets": "List of upstream targets to build, Strings separated by ',' (comma). By default it is None. Example: Lanai,ARM,RISCV",
+             "upstream_targets": "List of upstream targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc",
              "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
              "log_file": "Whether to place the build logs in the log file or not. By default True"})
 def build_target(c, target_name, environment_dir=".", upstream_targets="", build_type="Debug", clang=True, parallel_link_jobs=2, log_file=True):
