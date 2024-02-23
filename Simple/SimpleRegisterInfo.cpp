@@ -36,12 +36,16 @@ SimpleRegisterInfo::SimpleRegisterInfo() : SimpleGenRegisterInfo(SIMPLE::R0) {}
 
 const uint16_t *
 SimpleRegisterInfo::getCalleeSavedRegs(const MachineFunction * /*MF*/) const {
-  return nullptr;
+  static const uint16_t CalleeSavedRegs[] = {
+    SIMPLE::R4,
+    0
+  };
+  return CalleeSavedRegs;
 }
 
 BitVector SimpleRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
   BitVector Reserved(getNumRegs());
-  Reserved.set(SIMPLE::R0);
+  Reserved.set(SIMPLE::R8);
   // Add more registers that should be reserved
   return Reserved;
 }
@@ -49,11 +53,11 @@ BitVector SimpleRegisterInfo::getReservedRegs(const MachineFunction &MF) const {
 bool SimpleRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                             int SPAdj, unsigned FIOperandNum,
                                             RegScavenger *RS) const {
-  // assert(!"NOT IMPLEMENTED");
+  assert(!"NOT IMPLEMENTED");
   return false;
 }
 
 Register
 SimpleRegisterInfo::getFrameRegister(const MachineFunction & /*MF*/) const {
-  return SIMPLE::R0;
+  return SIMPLE::R10;
 }

@@ -32,6 +32,16 @@ static MCDisassembler *createSimpleDisassembler(const Target & /*T*/,
   return new SimpleDisassembler(STI, Ctx);
 }
 
+template <int width>
+static DecodeStatus decodeSImmOperand(MCInst &Inst, uint64_t Imm, uint64_t Address, const void *Decoder) {
+  // Cast the immediate value to a 16-bit integer
+  int16_t Imm16 = static_cast<int16_t>(Imm);
+
+  // Add the immediate operand to the instruction
+  Inst.addOperand(MCOperand::createImm(Imm16));
+  return MCDisassembler::Success;
+}
+
 extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSimpleDisassembler() {
   // Register the disassembler
   TargetRegistry::RegisterMCDisassembler(getTheSimpleTarget(),

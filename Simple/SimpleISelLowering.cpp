@@ -50,6 +50,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <utility>
+#include <iostream>
 
 #define DEBUG_TYPE "simple-lower"
 
@@ -68,15 +69,49 @@ SDValue SimpleTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallCon
     const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
     SelectionDAG &DAG) const  
 {
-  return Chain;
+  SDValue Flag;
+  SmallVector<SDValue, 4> RetOps(1, Chain);
+
+  if (Outs.size() >= SIMPLE::GPRRegClass.getNumRegs())
+  {
+    assert(!"not implemented");
+    return SDValue();
+  }
+
+  // Return is always ret 0
+  RetOps.push_back(DAG.getConstant(0, DL, MVT::i32));
+
+  // Build CopyToReg's
+  for (unsigned i = 0; i != Outs.size(); ++i) 
+  {
+    if (Outs[i].VT.SimpleTy != MVT::i32)
+      assert(!"not implemented");
+
+    unsigned loc_reg = SIMPLE::GPRRegClass.getRegister(i);
+
+    Chain = DAG.getCopyToReg(Chain, DL, loc_reg,
+    OutVals[i], Flag);
+
+    Flag = Chain.getValue(1);
+    RetOps.push_back(DAG.getRegister(loc_reg, Outs[i].VT));
+  }
+
+  RetOps[0] = Chain;  // Update chain.
+
+  // Add the flag if we have it.
+  if (Flag.getNode())
+    RetOps.push_back(Flag);
+
+  return DAG.getNode(SimpleISD::RET, DL, MVT::Other,
+    ArrayRef<SDValue>(&RetOps[0], RetOps.size()));
 }
 
 const char *SimpleTargetLowering::getTargetNodeName(unsigned Opcode) const
 {
   switch (Opcode)
   {
-  case SimpleISD::RET : return "SIMPLE::RET";
-  default             : return NULL;
+  case SimpleISD::RET   : return "SIMPLE::RET";
+  default               : return NULL;
   }
 }
 

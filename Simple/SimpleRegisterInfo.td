@@ -21,7 +21,7 @@ let Namespace = "SIMPLE" in {
 
 // Integer registers
 foreach i = 0-31 in {
-  def R#i : SimpleReg<i, "r"#i>, DwarfRegNum<[i]>;
+  def R#i : SimpleReg<i, "R"#i>, DwarfRegNum<[i]>;
 }
 
 // Register classes.
@@ -32,7 +32,7 @@ class SimpleRegisterClass<list<ValueType> types, int size,
       let CopyCost = copyCost;
 }
 
-def GPR : SimpleRegisterClass <[i32, f32], 32, 32, (add (sequence "R%u", 0, 31))>;
+def GPR : SimpleRegisterClass <[i32], 32, 32, (add (sequence "R%u", 0, 31))>;
 
 // Register operands
 class SimpleRegisterOperand<RegisterClass RC> : RegisterOperand<RC>

@@ -169,6 +169,32 @@ public:
 
   bool isImm() const override { return Kind == IMMEDIATE; }
 
+  bool isSImm16() const {
+    if (!isImm())
+      return false;
+    
+    // Constant case
+    if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
+      int64_t Value = ConstExpr->getValue();
+      // Check if value fits in 16 bits or value of the form 0xffffxyzw
+      return isInt<16>(static_cast<int32_t>(Value));
+    }
+    return false;
+  }
+
+  bool isSImm32() const {
+    if (!isImm())
+      return false;
+    
+    // Constant case
+    if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
+      int64_t Value = ConstExpr->getValue();
+      // Check if value fits in 16 bits or value of the form 0xffffxyzw
+      return isInt<32>(static_cast<int32_t>(Value));
+    }
+    return false;
+  }
+
   bool isMem() const override {
     return Kind == MEMORY_IMM;
   }

@@ -30,5 +30,7 @@ def CC_Simple32 : CallingConv<[
 def RetCC_Simple32 : CallingConv<[
   // Specify two registers to allow returning 64-bit results that have already
   // been lowered to 2 32-bit values.
-  CCIfType<[i32], CCAssignToReg<[R5, R6]>>
+  CCIfType<[i32], CCAssignToReg<[R0, R1]>>
 ]>;
+
+def CSR: CalleeSavedRegs<(add)>;

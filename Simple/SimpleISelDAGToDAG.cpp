@@ -74,7 +74,6 @@ INITIALIZE_PASS(SimpleDAGToDAGISel, DEBUG_TYPE, PASS_NAME, false, false)
 // expanded, promoted and normal instructions
 void SimpleDAGToDAGISel::Select(SDNode *Node) {
   // Select the default instruction
-  std::cout << "SimpleDAGToDAGISel -> Node->getOperationName() = \n" << Node->getOperationName() << std::endl;
   SelectCode(Node);
 }
 

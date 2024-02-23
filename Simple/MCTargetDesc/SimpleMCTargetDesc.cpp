@@ -64,7 +64,7 @@ static MCInstrInfo *createSimpleMCInstrInfo() {
 
 static MCRegisterInfo *createSimpleMCRegisterInfo(const Triple & /*TT*/) {
   MCRegisterInfo *X = new MCRegisterInfo();
-  InitSimpleMCRegisterInfo(X, SIMPLE::R2, 0, 0, SIMPLE::R0);
+  InitSimpleMCRegisterInfo(X, SIMPLE::R0);
   return X;
 }
 

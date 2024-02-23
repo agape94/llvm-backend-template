@@ -117,6 +117,11 @@ bool SimpleAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
 //===----------------------------------------------------------------------===//
 
 void SimpleAsmPrinter::emitInstruction(const MachineInstr *MI) {
+  SimpleMCInstLower MCInstLowering(OutContext, *this);
+  MCSubtargetInfo STI = getSubtargetInfo();
+  MCInst TmpInst;
+  MCInstLowering.Lower(MI, TmpInst);
+  OutStreamer->emitInstruction(TmpInst, STI);
 }
 
 // isBlockOnlyReachableByFallthough - Return true if the basic block has
