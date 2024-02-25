@@ -88,7 +88,7 @@ def git_apply_patch(patch):
 
 # ==================================================================================================================
 
-def check_arguments(target_name, path, arch):
+def check_arguments(target_name, path, arch, endianess):
   if not target_name[0].isupper():
     raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
   
@@ -97,6 +97,9 @@ def check_arguments(target_name, path, arch):
 
   if not arch in {8, 16, 32, 64} :
     raise ValueError(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
+  
+  if not endianess in {"little", "big"}:
+    raise ValueError(f"Please provide a valid endianess. Possible values are: 'little' or 'big'")
   
   repo_name = f"llvm-{target_name.lower()}-backend"
   new_backend_path = os.path.join(path, repo_name)
@@ -110,17 +113,18 @@ def check_arguments(target_name, path, arch):
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
             "path": "Location on disk where the new environment will be placed",
             "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
+            "endianess": "little by default. Whether the new target is little-endian of big-endian. Possible values: 'little' or 'big'",
             "build": "True by default. Whether or not to start compiling the target after setting up the environment",
             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
             "log_file": "Whether to place the build logs in the log file or not. By default True"})
-def setup_new_environment(c, target_name, path, arch=32, build=True, parallel_link_jobs=2, log_file=True):
+def setup_new_environment(c, target_name, path, arch=32, endianess="little", build=True, parallel_link_jobs=2, log_file=True):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. 
   Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
   The script also sets up a git repository, unless `init_repo` is False. 
   After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
   """
-  check_arguments(target_name, path, arch)
+  check_arguments(target_name, path, arch, endianess)
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
   
@@ -165,12 +169,23 @@ def setup_new_environment(c, target_name, path, arch=32, build=True, parallel_li
   search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
                                 "Simple", target_name,
                                 "SIMPLE", target_name.upper())
-  
   git_apply_patch(new_patch_file_path)
+
+  template_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{endianess.capitalize()}EndianTarget.patch")
+  new_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}{endianess.capitalize()}Endian.patch")
+  copy_file(template_endianess_patch_file_path, new_endianess_patch_file_path)
+
+  search_replace_in_file(new_endianess_patch_file_path, "simple", target_name.lower(), 
+                                "Simple", target_name,
+                                "SIMPLE", target_name.upper())
+  
+  git_apply_patch(new_endianess_patch_file_path)
+  
   git_add(environment_path)
   git_commit(f"Add target {target_name} to LLVM build system")
 
   os.remove(new_patch_file_path)
+  os.remove(new_endianess_patch_file_path)
 
   info(f"Add new target to Clang build system")
   template_patch_file_path = os.path.join(project_root, "patches", f"addTargetToClang.patch")

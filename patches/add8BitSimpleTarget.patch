@@ -301,14 +301,6 @@ index a3d6a06af..d11df6806 100644
    case Triple::r600:
    case Triple::shave:
    case Triple::sparcel:
-@@ -1762,6 +1770,7 @@ bool Triple::isLittleEndian() const {
-   case Triple::mips64el:
-   case Triple::mipsel:
-   case Triple::msp430:
-+  case Triple::simple:
-   case Triple::nvptx64:
-   case Triple::nvptx:
-   case Triple::ppcle:
 diff --git a/llvm/tools/llvm-readobj/ELFDumper.cpp b/llvm/tools/llvm-readobj/ELFDumper.cpp
 index bc8e0413b..08420835f 100644
 --- a/llvm/tools/llvm-readobj/ELFDumper.cpp

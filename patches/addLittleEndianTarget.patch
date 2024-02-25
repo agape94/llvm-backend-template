@@ -1,0 +1,12 @@
+diff --git a/llvm/lib/TargetParser/Triple.cpp b/llvm/lib/TargetParser/Triple.cpp
+index 09153a2f6..e7450eaf0 100644
+--- a/llvm/lib/TargetParser/Triple.cpp
++++ b/llvm/lib/TargetParser/Triple.cpp
+@@ -1762,6 +1770,7 @@ bool Triple::isLittleEndian() const {
+   case Triple::mips64el:
+   case Triple::mipsel:
+   case Triple::msp430:
++  case Triple::simple:
+   case Triple::nvptx64:
+   case Triple::nvptx:
+   case Triple::ppcle:
