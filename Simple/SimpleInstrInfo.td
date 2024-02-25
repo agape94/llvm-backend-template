@@ -137,13 +137,13 @@ def i32hi16 : Operand<i32>, PatLeaf <(i32 imm), [{
 }
 
 let isAsCheapAsAMove = 1, isCodeGenOnly = 1 in
-  def MOVHI : F_DI<0b100100, (outs GPROperand:$rd), (ins i32hi16:$imm16),
-                     "mov\t$rd, $imm16",
-                     [(set GPROperand:$rd, i32hi16:$imm16)]>;
+  def MOVHI : F_DI<0b100100, (outs GPROperand:$rd), (ins i32hi16:$imm),
+                     "mov",
+                     [(set GPROperand:$rd, i32hi16:$imm)]>;
 let isAsCheapAsAMove = 1, isCodeGenOnly = 1 in
-  def MOVLO : F_DI<0b100101, (outs GPROperand:$rd), (ins i32lo16:$imm16),
-                     "mov\t$rd, $imm16",
-                     [(set GPROperand:$rd, i32lo16:$imm16)]>;
+  def MOVLO : F_DI<0b100101, (outs GPROperand:$rd), (ins i32lo16:$imm),
+                     "mov",
+                     [(set GPROperand:$rd, i32lo16:$imm)]>;
 
 let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
   def RET : SimpleInst<(outs), (ins GPROperand:$rs),

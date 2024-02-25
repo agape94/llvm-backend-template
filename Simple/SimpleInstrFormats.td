@@ -45,11 +45,11 @@ class F_D<dag outs, dag ins, string asm, string operands, list<dag> pattern = []
 
 // Category: Destination register and 16-bit immediate
 class F_DI<bits<6> func, dag outs, dag ins, string asm, list<dag> pattern = []>
-   : F_D<outs, ins, asm, "$rd, $imm16", pattern> {
-  bits<16> imm16;
+   : F_D<outs, ins, asm, "$rd, $imm", pattern> {
+  bits<16> imm;
 
   let Inst{31-26} = func;
-  let Inst{15-0}  = imm16;
+  let Inst{15-0}  = imm;
 }
 
 // Format: Two registers
