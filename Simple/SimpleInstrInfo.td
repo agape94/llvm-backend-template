@@ -73,35 +73,11 @@ def simm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getSExtValue())
 // Very Simple instruction set
 // -------------------------------------------------- //
 
-//def ADD_I : F_II<0b100000,
-//                (outs GPROperand:$rd),
-//                (ins GPROperand:$rs1, simm16:$imm16), 
-//                "add", 
-//                [(set GPROperand:$rd, (add GPROperand:$rs1, simm16:$imm16))]>;
-
 def ADD_I : F_IR<0b110000,
                 (outs GPROperand:$rd),
                 (ins GPROperand:$rs1, GPROperand:$rs2), 
                 "add", 
                 [(set GPROperand:$rd, (add GPROperand:$rs1, GPROperand:$rs2))]>;
-
-//let isReturn = 1, isTerminator = 1, isBarrier = 1 in {
-//  def RET : Pseudo<(outs), (ins GPROperand:$src), [(SimpleRetNode GPROperand:$src)]>;
-//}
-
-// Load 32int instruction
-//def LOAD32ri : SimpleInst<(outs GPR:$dst), (ins simm32:$src), 
-//                          "ld", "$dst, $src", 
-//                          [(set GPR:$dst, (load simm32:$src))]> {
-//  let mayLoad = 1;
-//}
-
-//def LOAD16ri : F_DI<0b100100,
-//                (outs GPROperand:$rd),
-//                (ins simm16:$imm16), 
-//                "ld", 
-//                [(set GPROperand:$rd, (load simm16:$imm16))]>;
-
 
 // Extract bits 0-15 (low-end) of an immediate value.
 def LO16 : SDNodeXForm<imm, [{
@@ -153,10 +129,3 @@ let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
     let PostEncoderMethod = "";
   }
 }
-
-
-// unsigned 16-bit immediate
-//def : Pat<(i32 i32lo16:$imm), (OR_I_LO (i32 R0), imm:$imm)>;
-
-// arbitrary immediate
-//def : Pat<(i32 imm:$imm), (OR_I_LO (MOVHI (HI16 imm:$imm)), (LO16 imm:$imm))>;
