@@ -22,6 +22,7 @@ using namespace llvm;
 namespace {
 class SimpleAsmBackend : public MCAsmBackend {
   Triple::OSType OSType;
+  MCFixupKindInfo FixupKindInfo;
 
 public:
   SimpleAsmBackend(const Target &T, Triple::OSType OST)
@@ -73,7 +74,7 @@ SimpleAsmBackend::createObjectTargetWriter() const {
 const MCFixupKindInfo &
 SimpleAsmBackend::getFixupKindInfo(MCFixupKind Kind) const {
   // assert(false && "Not implemented!");
-  return MCFixupKindInfo();
+  return FixupKindInfo;
 }
 
 } // namespace
