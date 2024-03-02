@@ -28,9 +28,6 @@ class Target;
 
 extern Target TheSimpleTarget;
 
-MCCodeEmitter *createSimpleMCCodeEmitter(const MCInstrInfo &MCII,
-                                        MCContext &Ctx);
-
 MCAsmBackend *createSimpleAsmBackend(const Target &T, const MCSubtargetInfo &STI,
                                     const MCRegisterInfo &MRI,
                                     const MCTargetOptions &Options);

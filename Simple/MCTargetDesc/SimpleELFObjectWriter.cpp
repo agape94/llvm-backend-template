@@ -46,11 +46,6 @@ bool SimpleELFObjectWriter::needsRelocateWithSymbol(const MCSymbol & /*SD*/,
   return false;
 }
 
-// std::unique_ptr<MCObjectTargetWriter>
-// llvm::createSimpleELFObjectWriter(uint8_t OSABI) {
-//   return std::make_unique<SimpleELFObjectWriter>(OSABI);
-// }
-
 std::unique_ptr<MCObjectTargetWriter> createSimpleELFObjectWriter(uint8_t OSABI)
 {
   return std::make_unique<SimpleELFObjectWriter>(OSABI);
