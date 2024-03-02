@@ -8,7 +8,7 @@ The template implements a minimal target called `Simple`, that only has a few in
 # Prerequisites
 - Linux, MacOS or Windows
 - Python 3.x
-- Python invoke
+- Python invoke module
 - ninja for building the environment
 
 # How to use
@@ -34,7 +34,7 @@ To find more information about a specific task, you can run the following comman
 ## Setup a new environment
 In order to create a new environment, clone this repository and open the folder in a new shell. After that, run the following command:
 ```
-inv se -p <path-to-place-new-environment> -t <target-name> [-a <8, 16, 32, or 64>] [--[no-]build]
+inv se -p <path-to-place-new-environment> -t <target-name> [-a <8, 16, 32, or 64>] [-e <"little", "big">] [--[no-]build]
 ```
 Notes:
 - The `arch` argument is set to 32 bits by default
@@ -44,10 +44,11 @@ Notes:
 The process of setting up a new LLVM Backend development environment has a the following steps:
 
 1. **Download the LLVM Release** - For this project, the release version has been fixed to `17.0.2`, because LLVM does not guarantee API stability in any way. That means that the template may not compile anymore with a newer LLVM version.
-2. **Initialize git repository and initial commit** - The LLVM release is unzipped to the given location and the git repository is initialized. The git repository is necessary for step TODO
+2. **Initialize git repository and initial commit** - The LLVM release is unzipped to the given location and the git repository is initialized. The git repository is necessary in order to apply git patches at steps 4 and 5.
 3. **Copy the `Simple` template folder and replace all occurences with the `target-name`** - The new target directory will be placed in the `[llvm-source-folder]/lib/Target/[target-name]`
 4. **Integrate new target into LLVM build system** - This is done by applying a git patch. Integrating a new backend into the LLVM build system requires various changes to the LLVM sources. These changes also depend on the bit-width of the target (8, 16, 32 or 64 bit architecture)
-5. **Build the new target** - The task will trigger the build automatically, unless the `--no-build` is provided as an argument. 
+5. **Integrate new target into CLANG to enable C/C++ support** - This is done by applying a git patch. Integrating a new backend into CLANG requires various changes to the CLANG sources.
+6. **Build the new target** - The task will trigger the build automatically, unless the `--no-build` is provided as an argument. 
 
 ### Working with the new environment
 The new LLVM environment will be placed at the specified path. The template will also provide a build task in the environment folder to make it easier to build whenever there are new changes to the code. Run `inv --help b (or build-target)` to see detailed descriptions for all arguments
