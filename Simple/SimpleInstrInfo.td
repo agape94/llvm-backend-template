@@ -26,10 +26,6 @@ def SDT_SimpleCallSeqStart : SDCallSeqStart<[SDTCisVT<0, i32>,
 def SDT_SimpleCallSeqEnd   : SDCallSeqEnd<[SDTCisVT<0, i32>,
                                           SDTCisVT<1, i32>]>;
 
-// def Call             : SDNode<"SimpleISD::CALL", SDT_SimpleCall,
-//                               [SDNPHasChain, SDNPOptInGlue, SDNPOutGlue,
-//                                SDNPVariadic]>;
-
 def SimpleRetNode    : SDNode<"SimpleISD::RET", SDTBrind,
                               [SDNPHasChain, SDNPOptInGlue, SDNPVariadic]>;
 def CallSeqStart     : SDNode<"ISD::CALLSEQ_START", SDT_SimpleCallSeqStart,
@@ -76,54 +72,47 @@ def simm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getSExtValue())
 def ADD_I : F_IR<0b110000,
                 (outs GPROperand:$rd),
                 (ins GPROperand:$rs1, GPROperand:$rs2), 
-                "add", 
+                "add $rd, $rs1, $rs2", 
                 [(set GPROperand:$rd, (add GPROperand:$rs1, GPROperand:$rs2))]>;
 
-// Extract bits 0-15 (low-end) of an immediate value.
+
 def LO16 : SDNodeXForm<imm, [{
-  return CurDAG->getTargetConstant((uint32_t)N->getZExtValue() & 0xffff,
-                                   SDLoc(N), MVT::i32);
+  // Transformation function: get the low 16 bits.
+  return getI32Imm((unsigned short)N->getZExtValue(), SDLoc(N));
 }]>;
 
-// Extract bits 16-31 (high-end) of an immediate value.
-// Transformation function: shift the immediate value down into the low bits.
 def HI16 : SDNodeXForm<imm, [{
-  return CurDAG->getTargetConstant((uint32_t)N->getZExtValue() >> 16, SDLoc(N),
-                                   MVT::i32);
+  // Transformation function: shift the immediate value down into the low bits.
+  return getI32Imm((uint32_t)(((uint32_t)N->getZExtValue() >> 16) << 16), SDLoc(N));
 }]>;
 
-def i32lo16 : Operand<i32>, PatLeaf <(i32 imm), [{
-    // i32lo16 predicate - true if the 32-bit immediate has only rightmost 16
-    // bits set.
-    return ((N->getZExtValue() & 0xFFFFUL) == N->getZExtValue());}], LO16>
-{
-  let ParserMatchClass = SImmAsmOperand<16>;
-  let EncoderMethod = "getImmOpValue";
-  let DecoderMethod = "decodeSImmOperand<16>";
-}
+def imm16ShiftedSExt : PatLeaf<(imm), [{
+  if (N->getZExtValue() & 0xFFFF) return false;
+  if (N->getValueType(0) == MVT::i32)
+    return true;
+  // For 64-bit, make sure it is sext right.
+  return N->getZExtValue() == (uint64_t)(int)N->getZExtValue();
+}], HI16>;
 
-def i32hi16 : Operand<i32>, PatLeaf <(i32 imm), [{
-    // i32hi16 predicate - true if the 32-bit immediate has only leftmost 16
-    // bits set.
-    return ((N->getZExtValue() & 0xFFFF0000UL) == N->getZExtValue());}], HI16>
-{
-  let ParserMatchClass = SImmAsmOperand<16>;
-  let EncoderMethod = "getImmOpValue";
-  let DecoderMethod = "decodeSImmOperand<16>";
-}
+def immZExt16  : PatLeaf<(imm), [{
+  return (uint64_t)N->getZExtValue() == (unsigned short)N->getZExtValue();
+}], LO16>;
 
-let isAsCheapAsAMove = 1, isCodeGenOnly = 1 in
-  def MOVHI : F_DI<0b100100, (outs GPROperand:$rd), (ins i32hi16:$imm),
-                     "mov",
-                     [(set GPROperand:$rd, i32hi16:$imm)]>;
-let isAsCheapAsAMove = 1, isCodeGenOnly = 1 in
-  def MOVLO : F_DI<0b100101, (outs GPROperand:$rd), (ins i32lo16:$imm),
-                     "mov",
-                     [(set GPROperand:$rd, i32lo16:$imm)]>;
+def LDI : F_DI<0b101000, (outs GPROperand:$rd), (ins simm16:$imm),
+                       "ld $rd, $imm",
+                       [(set i32:$rd, imm16ShiftedSExt:$imm)]>;
+
+def ORI   : F_DI<0b100111, (outs GPROperand:$rd), (ins GPROperand:$RST, simm16:$imm),
+                    "ori $rd, $RST, $imm",
+                    [(set i32:$rd, (or i32:$RST, immZExt16:$imm))]>;
+
+// Arbitrary immediate support.  Implement in terms of LIS/ORI.
+def : Pat<(i32 imm:$imm),
+          (ORI (LDI (HI16 imm:$imm)), (LO16 imm:$imm))>;
 
 let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
   def RET : SimpleInst<(outs), (ins GPROperand:$rs),
-                   "ret", "",
+                   "ret",
                    [(SimpleRetNode GPROperand:$rs)]> {
     // Post encoding is not needed for RET.
     let PostEncoderMethod = "";
