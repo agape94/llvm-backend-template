@@ -55,6 +55,6 @@ The new LLVM environment will be placed at the specified path. The template will
 The build can be triggered by running the following command in the root folder of the environment:
 
 ```
-inv b -t <My Target> [--parallel-link-jobs=2] --build-type=Debug [--upstream-targets=<ARM,RISCV,Lanai,etc>]
+inv b -t <My Target> [--path=./] [--parallel-link-jobs=2] --build-type=Debug [--upstream-targets=<ARM,RISCV,Lanai,etc>] [--[no-]clang]
 ```
 The build logs will be placed into a log file in the environment directory to make it easier to see if there were any issues during the build. The task will also print out the configure and build commands should you want to run them separately.
