@@ -73,20 +73,29 @@ The process of setting up a new LLVM Backend development environment has a the f
 
 ### Working with the new environment
 The new LLVM environment will be placed at the specified path. The template will also provide a build task in the environment folder to make it easier to build whenever there are new changes to the code. Run `inv --help b[uild-target]` inside the environment directory to see detailed descriptions for all arguments.
+```
+Usage: inv[oke] [--core-opts] b [--options] [other tasks here ...]
 
-The build can be triggered by running the following command in the root folder of the environment:
+Docstring:
+  Build the given target
+
+Options:
+  -a INT, --parallel-link-jobs=INT       Number of parallel link jobs. By default it is set to 2. Note: A high number of link
+                                         jobs may cause your system to run out of memory and crash.
+  -b STRING, --build-type=STRING         Possible values: Debug, Release
+  -c, --[no-]clang                       Whether to build clang or not. Default value: True
+  -p STRING, --path=STRING               Path to llvm source root. By default the current directory is considered
+  -t STRING, --target-name=STRING        The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM,
+                                         Mips
+  -u STRING, --upstream-targets=STRING   List of upstream targets to build, Strings separated by ';' (semicolon). By default
+                                         it is None. Example: Lanai;ARM;RISCV;etc
+```
+
+Usage example:
 
 ```
-inv b -t <target-name> [--path=./] [--parallel-link-jobs=2] --build-type=Debug [--upstream-targets=<ARM,RISCV,Lanai,etc>] [--[no-]clang]
+inv b -t MyTarget -p ~/temp/llvm-mytarget-backend -a 2 -b Release -u ARM;RISCV --no-clang
 ```
-
-Note: Python `invoke` also provides short names for all arguments. The command above can be significantly simplified as follows:
-
-```
-inv b -t <target-name> [-p /path/to/environment] [-a 2] [-b Release] [-u ARM,RISCV] [--no-clang]
-```
-
-The build logs will be placed into a log file in the environment directory to make it easier to see if there were any issues during the build. The task will also print out the configure and build commands should you want to run them separately.
 
 ## Generate assembly code
 This template target is just meant as a starting point for a new LLVM backend, and so the functionalities built into it are very limited. One can, however, build some very simple assembly code with it.
