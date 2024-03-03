@@ -26,19 +26,40 @@ Here there are two tasks defined. Running `inv --list` will show the available t
 Available tasks:
 
   build-target (b)             Build the given target
-  setup-new-environment (se)   Set up the environment in order to develop a new LLVM Backend for the given target name.
+  setup-new-environment (se)   Setup a new LLVM backend development environment with the given target name.
 ```
 
-To find more information about a specific task, you can run the following command: `inv -help [task_name]`. This command will print the usage instructions of the task, the task description, followed by detailed descriptions of all command line arguments.
+To find more information about a specific task, you can run the following command: `inv --help [task_name]`. This command will print the usage instructions of the task, the task description, followed by detailed descriptions of all command line arguments.
 
 ## Setup a new environment
-In order to create a new environment, clone this repository and open the folder in a new shell. After that, run the following command:
+In order to create a new environment, clone this repository and open the folder in a new shell. 
+
+For this purpose, the task `setup-new-environment (se)` will be used. Below there is the output of the command `inv --help se`:
 ```
-$ inv se -p <path-to-place-new-environment> -t <target-name> [-a <8, 16, 32, or 64>] [-e <"little", "big">] [--[no-]build]
+Usage: inv[oke] [--core-opts] se [--options] [other tasks here ...]
+
+Docstring:
+  Setup a new LLVM backend development environment for the given target name.
+
+Options:
+  -a INT, --arch=INT                 Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64
+  -b, --[no-]build                   Whether or not to start compiling the target after setting up the environment. Default
+                                     value: True
+  -e STRING, --endianess=STRING      Whether the new target is little-endian of big-endian. Default value: little. Possible
+                                     values: 'little' or 'big'
+  -l STRING, --llvm-version=STRING   Which LLVM release to use. Default version: 17.0.6. You could use a different version if
+                                     you want to, however, the template was only tested with 17.0.6, therefore it is not
+                                     guarateed to work properly with other LLVM versions.
+  -p STRING, --path=STRING           Location on disk where the new environment will be placed
+  -r INT, --parallel-link-jobs=INT   Number of parallel link jobs. By default it is set to 2. Note: A high number of link
+                                     jobs may cause your system to run out of memory and crash.
+  -t STRING, --target-name=STRING    The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips
 ```
-Notes:
-- The `arch` argument is set to 32 bits by default
-- The `build` argument is True by default, meaning that the task will trigger a build for the new target.
+
+Usage example:
+```
+$ inv se -p ~/temp -t MyTarget -a 32 -e "little" --no-build --no-clang -l 17.0.2 -r 2
+```
 
 ### Detailed explanation about the process
 The process of setting up a new LLVM Backend development environment has a the following steps:

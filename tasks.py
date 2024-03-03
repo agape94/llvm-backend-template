@@ -121,10 +121,7 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
             "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
 def setup_new_environment(c, target_name, path, arch=32, endianess="little", build=True, parallel_link_jobs=2, llvm_version=LLVM_DEFAULT_VERSION):
   """
-  Set up the environment in order to develop a new LLVM Backend for the given target name. 
-  Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
-  The script also sets up a git repository, unless `init_repo` is False. 
-  After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
+    Setup a new LLVM backend development environment for the given target name.
   """
   check_arguments(target_name, path, arch, endianess, llvm_version)
   
