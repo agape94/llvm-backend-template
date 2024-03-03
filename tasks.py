@@ -4,13 +4,10 @@ import os
 import wget
 import zipfile
 import shutil
+import re
 from replaceString import *
 from compileTasks import *
-
-
-LLVM_SUPPORTED_VERSION="17.0.2"
-LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{LLVM_SUPPORTED_VERSION}.zip"
-
+LLVM_DEFAULT_VERSION = "17.0.6"
 # ==================================================================================================================
 
 def info (msg):
@@ -21,12 +18,14 @@ def error (msg):
 
 # ==================================================================================================================
 
-def download_and_extract_release(extract_path, repo_name, cleanup=False):
+def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=False):
   
-  extract_folder_name = f"llvm-project-llvmorg-{LLVM_SUPPORTED_VERSION}"
+  extract_folder_name = f"llvm-project-llvmorg-{llvm_version}"
   zip_file_name = f"{extract_folder_name}.zip"
   temp_zip_path = os.path.join(os.getcwd(), zip_file_name)
   extract_folder_path = os.path.join(extract_path, extract_folder_name)
+  
+  LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{llvm_version}.zip"
   
   if os.path.exists(temp_zip_path):
     info(f"{temp_zip_path} already exists, skipping download")
@@ -88,7 +87,7 @@ def git_apply_patch(patch):
 
 # ==================================================================================================================
 
-def check_arguments(target_name, path, arch, endianess):
+def check_arguments(target_name, path, arch, endianess, llvm_version):
   if not target_name[0].isupper():
     raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
   
@@ -100,6 +99,9 @@ def check_arguments(target_name, path, arch, endianess):
   
   if not endianess in {"little", "big"}:
     raise ValueError(f"Please provide a valid endianess. Possible values are: 'little' or 'big'")
+
+  if not re.match(r"\d{1,2}\.\d{1,2}(\.\d{1,2})?", llvm_version):
+    raise ValueError("Please provide a valid LLVM version. Supported LLVM versions are 17.x.x")
   
   repo_name = f"llvm-{target_name.lower()}-backend"
   new_backend_path = os.path.join(path, repo_name)
@@ -112,19 +114,19 @@ def check_arguments(target_name, path, arch, endianess):
 @task(aliases = ['se'], 
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
             "path": "Location on disk where the new environment will be placed",
-            "arch": "32 by default. Bit width of the new target. Possible values: 8, 16, 32 or 64",
-            "endianess": "little by default. Whether the new target is little-endian of big-endian. Possible values: 'little' or 'big'",
-            "build": "True by default. Whether or not to start compiling the target after setting up the environment",
+            "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
+            "endianess": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
+            "build": "Whether or not to start compiling the target after setting up the environment. Default value: True ",
             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
-            "log_file": "Whether to place the build logs in the log file or not. By default True"})
-def setup_new_environment(c, target_name, path, arch=32, endianess="little", build=True, parallel_link_jobs=2, log_file=True):
+            "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
+def setup_new_environment(c, target_name, path, arch=32, endianess="little", build=True, parallel_link_jobs=2, llvm_version=LLVM_DEFAULT_VERSION):
   """
   Set up the environment in order to develop a new LLVM Backend for the given target name. 
   Downloads the LLVM release and places the new backend into the `llvm/lib/Target` folder. 
   The script also sets up a git repository, unless `init_repo` is False. 
   After the repository has been initialized, the script will proceed to build the new target unless `build` argument is False
   """
-  check_arguments(target_name, path, arch, endianess)
+  check_arguments(target_name, path, arch, endianess, llvm_version)
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
   
@@ -133,7 +135,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   project_root = os.getcwd()
 
   # download LLVM release
-  download_and_extract_release(extract_path=path, repo_name=repo_name)
+  download_and_extract_release(extract_path=path, repo_name=repo_name, llvm_version=llvm_version)
   
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
@@ -144,7 +146,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   git_add_all()
 
   info(f"Adding initial commit ")
-  git_commit(f"Add LLVM-{LLVM_SUPPORTED_VERSION} release")
+  git_commit(f"Add LLVM-{llvm_version} release")
   
   # copy the template folder to the given location
   template_path = os.path.join(project_root, "Simple")
