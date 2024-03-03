@@ -84,7 +84,7 @@ SDValue PrototypeTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID Call
   // Build CopyToReg's
   for (unsigned i = 0; i != Outs.size(); ++i) 
   {
-    if (Outs[i].VT.PrototypeTy != MVT::i32)
+    if (Outs[i].VT.SimpleTy != MVT::i32)
       assert(!"not implemented");
 
     unsigned loc_reg = PROTOTYPE::GPRRegClass.getRegister(i);
