@@ -48,7 +48,8 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Debu
 
   os.chdir(path)
   enable_clang = "-DLLVM_ENABLE_PROJECTS=\"clang\"" if clang else ""
-  cmake_command = f'cmake -S llvm -B {build_dir} -G Ninja {enable_clang} -DCMAKE_INSTALL_PREFIX={build_dir} -DCMAKE_BUILD_TYPE={build_type} -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="{target_name}" -DLLVM_TARGETS_TO_BUILD="{upstream_targets}" -DLLVM_PARALLEL_LINK_JOBS={parallel_link_jobs} -DLLVM_USE_LINKER=lld'
+  enable_assertions = "-DLLVM_ENABLE_ASSERTIONS=ON" if build_type == "Debug" else "-DLLVM_ENABLE_ASSERTIONS=OFF"
+  cmake_command = f'cmake -S llvm -B {build_dir} -G Ninja {enable_clang} -DCMAKE_INSTALL_PREFIX={build_dir} {enable_assertions} -DCMAKE_BUILD_TYPE={build_type} -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="{target_name}" -DLLVM_TARGETS_TO_BUILD="{upstream_targets}" -DLLVM_PARALLEL_LINK_JOBS={parallel_link_jobs} -DLLVM_USE_LINKER=lld'
   
   info(f"Configuring {target_name} ... ")
   info(f"Cmake command: {cmake_command}")
