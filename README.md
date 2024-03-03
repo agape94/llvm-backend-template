@@ -66,3 +66,56 @@ inv b -t <target-name> [-p /path/to/environment] [-a 2] [-b Release] [-u ARM,RIS
 ```
 
 The build logs will be placed into a log file in the environment directory to make it easier to see if there were any issues during the build. The task will also print out the configure and build commands should you want to run them separately.
+
+## Generate assembly code
+This template target is just meant as a starting point for a new LLVM backend, and so the functionalities built into it are very limited. One can, however, build some very simple assembly code with it.
+
+If the build is successful, a new directory will be created inside the environment directory. This directory will be called `build_<target-name>`, and will contain all the binaries generated, including `llc`, which is the actual compiler we are interested in.
+
+As input, `llc` needs `LLVM IR` source code. Create a new file `main.ll` and place the following code inside.
+```
+; ModuleID = 'example'
+
+define i32 @main() {
+entry:
+  ; Perform the addition operation
+  %0 = add i32 2147483640, 3
+  
+  ; Return the result
+  ret i32 %0
+}
+```
+
+In the code above, a function `main` is defined that simply returns the result of an `add` instruction between two 32-bit integers.
+In order to generate the assembly code for this program, `llc` can be run as follows:
+
+```
+$ ./build_<target_name>/bin/llc --mtriple=<target_name> /path/to/main.ll
+```
+
+Note: 
+  - The `--mtriple` flag tells `llc` for which target the code will be compiled. In our case it is `<target-name>`.
+  - The `.s` file containing the assembly code will be placed alongside the `.ll` file.
+
+The generated assembly code for the `LLVM IR` code above is the following:
+```
+	.text
+	.file	"main.ll"
+	.globl	main                            # -- Begin function main
+	.type	main,@function
+main:                                   # @main
+# %bb.0:                                # %entry
+	ld %R0, 0x7fff0000
+	ori %R0, %R0, 0xfffb
+	ld %R1, 0x0
+	ret
+.Lfunc_end0:
+	.size	main, .Lfunc_end0-main
+                                        # -- End function
+	.section	".note.GNU-stack","",@progbits
+```
+Notes:
+  - As you can see, the `add` instruction was optimized by LLVM during the optimizing phases and it was replaced by a `ld` instruction that simply placed the result computed at compile time into the return register `R0`. 
+  - The 32-bit result is splitted in two 16-bit values because the instructions are 32-bit wide, and the result would not fit into a single `ld` instruction. And so, the 16-bit `high` is loaded into the first 16-bits of the `R0` register and then a logical `or` with the `low` 16-bits ensures the whole 32-bit value is loaded into the `R0` register. 
+  - `R1` is also a return register, but only for 64-bit values by combining `R1:R0` registers, with `R0` being `low` and `R1` being `high`.
+  - The program then exits after the `ret` call.
