@@ -21,9 +21,8 @@ def error (msg):
              "build_type": "Possible values: Debug, Release",
              "clang": "If true, Clang will be built as well",
              "upstream_targets": "List of upstream targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc",
-             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
-             "log_file": "Whether to place the build logs in the log file or not. By default True"})
-def build_target(c, target_name, path=".", upstream_targets="", build_type="Debug", clang=True, parallel_link_jobs=2, log_file=True):
+             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash."})
+def build_target(c, target_name, path=".", upstream_targets="", build_type="Debug", clang=True, parallel_link_jobs=2):
   """
     Build the given target
   """
@@ -53,16 +52,8 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Debu
   
   info(f"Configuring {target_name} ... ")
   info(f"Cmake command: {cmake_command}")
-  
-  build_log_file = os.path.join(path, f"build-{target_name}-{build_type}-{datetime.now().strftime('%Y%m%d%H%M%S')}.log")
 
-  if log_file:
-    # Open a file for writing the output
-    with open(build_log_file, "w") as file:
-      process = subprocess.Popen(cmake_command, shell=True, stdout=file, stderr=file, text=True)
-  else:
-      process = subprocess.Popen(cmake_command, shell=True)
-  
+  process = subprocess.Popen(cmake_command, shell=True)
   # Wait for the subprocess to complete
   process.wait()
 
@@ -70,7 +61,7 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Debu
   if process.returncode == 0:
     info("Configured succesfully.")
   else:
-    raise Exception("Configure step failed." + f"Logs are available here: {build_log_file}" if log_file else "")
+    raise Exception("Configure step failed.")
 
   os.chdir(build_dir)
 
@@ -80,17 +71,7 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Debu
   info(f"Build command: {build_command}")
   info(f"Building target {target_name} ...")
   info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
-  
-  if log_file:
-    info(f"The build logs are available here: {build_log_file}")
-
-  if log_file:
-    # Open a file for writing the output
-    with open(build_log_file, "a") as file:
-      process = subprocess.Popen(build_command, shell=True, stdout=file, stderr=file, text=True)
-  else:
-    process = subprocess.Popen(build_command, shell=True)
-
+  process = subprocess.Popen(build_command, shell=True)
   # Wait for the subprocess to complete
   process.wait()
 
@@ -98,7 +79,7 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Debu
   if process.returncode == 0:
     info("Built succesfully!")
   else:
-    raise Exception("The build has failed." + f"Please check the log file for more information: {build_log_file}" if log_file else "")
+    raise Exception("The build has failed.")
   
   if os.getenv('CI') is not None:
     # Copy the build folder back

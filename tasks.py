@@ -211,4 +211,4 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
   if build:
-    build_target(c, target_name, path=environment_path, log_file=log_file, parallel_link_jobs=parallel_link_jobs)
+    build_target(c, target_name, path=environment_path, parallel_link_jobs=parallel_link_jobs)
