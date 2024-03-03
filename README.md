@@ -3,7 +3,7 @@ This project aims to solve one of the biggest challenges when writing an LLVM Ba
 
 If you want to write an LLVM Backend, the general advice from the LLVM Developers is to copy one of the official backends and adapt it to fit your architecture. However, an LLVM backend has a lot of custom code that only works for that specific architecture, and one would need to invest a large amount of time and effort to adapt the copied backend to the new architecture. 
 
-The template implements a minimal target called `Simple`, that only has a few instructions and a couple of registers, just to give the user a base to build a real architecture on. Development of this backend was done according to the general advice mentioned above. As a starting point, the `Lanai` backend was copied, all the occurences of `Lanai` were replaced with `Simple`, and all the functionality was stripped down to a minimum. However, the template produces a functional compiler that is able to generate assembly code. More details in section [Generate assembly code](#generate-assembly-code) of this document.
+The template implements a minimal target called `Prototype`, that only has a few instructions and a couple of registers, just to give the user a base to build a real architecture on. Development of this backend was done according to the general advice mentioned above. As a starting point, the `Lanai` backend was copied, all the occurences of `Lanai` were replaced with `Prototype`, and all the functionality was stripped down to a minimum. However, the template produces a functional compiler that is able to generate assembly code. More details in section [Generate assembly code](#generate-assembly-code) of this document.
 
 # Prerequisites
 - Linux, MacOS or Windows
@@ -66,7 +66,7 @@ The process of setting up a new LLVM Backend development environment has a the f
 
 1. **Download the LLVM Release** - For this project, the `17.0.6` version is downloaded by default, which is the latest release at the time of writing. It is possible to provide any released version, however it is not guarantedd that the build will succeed or that the compiler will work. The reason why is because LLVM does not guarantee API stability in any way. That means that the template may not compile anymore with other LLVM versions.
 2. **Initialize git repository and initial commit** - The LLVM release is unzipped to the given location and the git repository is initialized. The git repository is necessary in order to apply git patches at steps 4 and 5.
-3. **Copy the `Simple` template folder and replace all occurences with the `target-name`** - The new target directory will be placed in the `[llvm-source-folder]/lib/Target/[target-name]`.
+3. **Copy the `Prototype` template folder and replace all occurences with the `target-name`** - The new target directory will be placed in the `[llvm-source-folder]/lib/Target/[target-name]`.
 4. **Integrate new target into LLVM build system** - This is done by applying a git patch. Integrating a new backend into the LLVM build system requires various changes to the LLVM sources. These changes also depend on the bit-width of the target (8, 16, 32 or 64 bit architecture), which can be specified with a command-line argument.
 5. **Integrate new target into CLANG to enable C/C++ support** - This is done by applying a git patch. Integrating a new backend into CLANG requires various changes to the CLANG sources.
 6. **Build the new target** - The task will trigger the build automatically, unless `--no-build` is provided as an argument.

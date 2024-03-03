@@ -37,7 +37,7 @@ build:       # This job runs in the build stage, which runs first.
     - git config --global init.defaultBranch main
   script:
     - echo "Compiling the code..."
-    - inv se -p /build -t Simple --no-log-file --parallel-link-jobs=1
+    - inv se -p /build -t Prototype --no-log-file --parallel-link-jobs=1
     - echo "Compile complete."
 cleanup:
   stage: cleanup
@@ -45,4 +45,4 @@ cleanup:
     - linux-homer-non-docker
   script:
     - echo "Cleaning up"
-    - rm -fr $CI_BUILDS_DIR/llvm-simple-backend
+    - rm -fr $CI_BUILDS_DIR/llvm-prototype-backend

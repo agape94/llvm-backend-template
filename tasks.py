@@ -146,14 +146,14 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   git_commit(f"Add LLVM-{llvm_version} release")
   
   # copy the template folder to the given location
-  template_path = os.path.join(project_root, "Simple")
+  template_path = os.path.join(project_root, "Prototype")
   target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   copy_directory_recursively(src=template_path, dst=target_folder_path)
   
-  # replace all occurences of "Simple" with the given target name
-  info(f"Search and replace `Simple` target name with {target_name} in the backend folder ... ")
-  if target_name != "Simple":
+  # replace all occurences of "Prototype" with the given target name
+  info(f"Search and replace `Prototype` target name with {target_name} in the backend folder ... ")
+  if target_name != "Prototype":
     search_replace_in_directory(target_folder_path, target_name)
   
   git_add(target_folder_path)
@@ -161,22 +161,22 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   
   info(f"Add new target to LLVM build system")
   
-  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}BitSimpleTarget.patch")
+  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}BitPrototypeTarget.patch")
   new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLVM.patch")
   copy_file(template_patch_file_path, new_patch_file_path)
   
-  search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
-                                "Simple", target_name,
-                                "SIMPLE", target_name.upper())
+  search_replace_in_file(new_patch_file_path, "prototype", target_name.lower(), 
+                                "Prototype", target_name,
+                                "PROTOTYPE", target_name.upper())
   git_apply_patch(new_patch_file_path)
 
   template_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{endianess.capitalize()}EndianTarget.patch")
   new_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}{endianess.capitalize()}Endian.patch")
   copy_file(template_endianess_patch_file_path, new_endianess_patch_file_path)
 
-  search_replace_in_file(new_endianess_patch_file_path, "simple", target_name.lower(), 
-                                "Simple", target_name,
-                                "SIMPLE", target_name.upper())
+  search_replace_in_file(new_endianess_patch_file_path, "prototype", target_name.lower(), 
+                                "Prototype", target_name,
+                                "PROTOTYPE", target_name.upper())
   
   git_apply_patch(new_endianess_patch_file_path)
   
@@ -191,9 +191,9 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToClang.patch")
   copy_file(template_patch_file_path, new_patch_file_path)
 
-  search_replace_in_file(new_patch_file_path, "simple", target_name.lower(), 
-                                "Simple", target_name,
-                                "SIMPLE", target_name.upper())
+  search_replace_in_file(new_patch_file_path, "prototype", target_name.lower(), 
+                                "Prototype", target_name,
+                                "PROTOTYPE", target_name.upper())
 
   git_apply_patch(new_patch_file_path)
   git_add(environment_path)
