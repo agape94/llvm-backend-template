@@ -58,7 +58,7 @@ Options:
 
 Usage example:
 ```
-$ inv se -p ~/temp -t MyTarget -a 32 -e "little" --no-build --no-clang -l 17.0.2 -r 2
+$ inv se -p ~/temp -t MyTarget -a 32 -e "little" --no-build -l 17.0.2 -r 2
 ```
 
 ### Detailed explanation about the process
