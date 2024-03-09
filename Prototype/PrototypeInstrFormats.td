@@ -70,4 +70,7 @@ class F_II<bits<6> func, dag outs, dag ins, string asm, list<dag> pattern = []>
   let Inst{15-0}  = imm16;
 }
 
-
+class FMem<bits<6> func, dag outs, dag ins, string asm, list<dag> pattern>
+  :F_II<func, outs, ins, asm, pattern> {
+  let DecoderMethod = "DecodeMem";
+}

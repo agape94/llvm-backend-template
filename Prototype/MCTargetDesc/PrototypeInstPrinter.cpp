@@ -45,6 +45,48 @@ void PrototypeInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
   }
 }
 
+static void printMemoryBaseRegister(raw_ostream &OS, const unsigned AluCode,
+                                    const MCOperand &RegOp) {
+  assert(RegOp.isReg() && "Register operand expected");
+  OS << "[";
+  if (LPAC::isPreOp(AluCode))
+    OS << "*";
+  OS << "%" << PrototypeInstPrinter::getRegisterName(RegOp.getReg());
+  if (LPAC::isPostOp(AluCode))
+    OS << "*";
+  OS << "]";
+}
+
+template <unsigned SizeInBits>
+static void printMemoryImmediateOffset(const MCAsmInfo &MAI,
+                                       const MCOperand &OffsetOp,
+                                       raw_ostream &OS) {
+  assert((OffsetOp.isImm() || OffsetOp.isExpr()) && "Immediate expected");
+  if (OffsetOp.isImm()) {
+    assert(isInt<SizeInBits>(OffsetOp.getImm()) && "Constant value truncated");
+    OS << OffsetOp.getImm();
+  } 
+  else
+  {
+    OffsetOp.getExpr()->print(OS, &MAI);
+  }
+}
+
+void PrototypeInstPrinter::printMemOperand(const MCInst *MI, int OpNo,
+                                       raw_ostream &OS, const char *Modifier) {
+  const MCOperand &RegOp = MI->getOperand(OpNo);
+  const MCOperand &OffsetOp = MI->getOperand(OpNo + 1);
+  const MCOperand &AluOp = MI->getOperand(OpNo + 2);
+  const unsigned AluCode = AluOp.getImm();
+
+  // Offset
+  printMemoryImmediateOffset<16>(MAI, OffsetOp, OS);
+
+  // Register
+  printMemoryBaseRegister(OS, AluCode, RegOp);
+
+}
+
 void PrototypeInstPrinter::printInst(const MCInst *MI, uint64_t Address,
                                  StringRef Annotation,
                                  const MCSubtargetInfo & /*STI*/,

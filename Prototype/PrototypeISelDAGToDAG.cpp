@@ -68,6 +68,7 @@ private:
 
   // Instruction Selection not handled by the auto-generated tablgen
   void Select(SDNode *N) override;
+  bool SelectAddr(SDValue Addr, SDValue &Base, SDValue &Offset);
 };
 
 } // namespace
@@ -81,6 +82,22 @@ INITIALIZE_PASS(PrototypeDAGToDAGISel, DEBUG_TYPE, PASS_NAME, false, false)
 void PrototypeDAGToDAGISel::Select(SDNode *Node) {
   // Select the default instruction
   SelectCode(Node);
+}
+
+bool PrototypeDAGToDAGISel::SelectAddr(SDValue Addr, SDValue &Base,
+                                       SDValue &Offset) {
+  SDLoc DL(Addr);
+
+  if (ConstantSDNode *CN = dyn_cast<ConstantSDNode>(Addr)) {
+    // Fits in 16-bit signed immediate.
+    if (isInt<16>(CN->getSExtValue())) {
+      int16_t Imm = CN->getSExtValue();
+      Offset = CurDAG->getTargetConstant(Imm, DL, CN->getValueType(0));
+      Base = CurDAG->getRegister(PROTOTYPE::R0, CN->getValueType(0));
+      return true;
+    }
+  }
+  return false;
 }
 
 // createLanaiISelDag - This pass converts a legalized DAG into a
