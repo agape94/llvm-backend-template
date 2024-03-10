@@ -65,84 +65,16 @@ def simm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getSExtValue())
   let DecoderMethod = "decodeSImmOperand<32>";
 }
 
-// Address operand
-def mem : Operand<iPTR> {
-  let PrintMethod = "printMemOperand";
-  let MIOperandInfo = (ops GPROperand, simm16);
-  let EncoderMethod = "getMemEncoding";
-}
-
-def addr : 
-  ComplexPattern<iPTR, 2, "SelectAddr", [frameindex], []>;
-
-//===----------------------------------------------------------------------===//
-// Pattern fragment for load/store
-//===----------------------------------------------------------------------===//
-
-class AlignedLoad<PatFrag Node> :
-  PatFrag<(ops node:$ptr), (Node node:$ptr), [{
-  LoadSDNode *LD = cast<LoadSDNode>(N);
-  return LD->getMemoryVT().getSizeInBits()/8 <= LD->getAlign().value();
-}]>;
-
-class AlignedStore<PatFrag Node> :
-  PatFrag<(ops node:$val, node:$ptr), (Node node:$val, node:$ptr), [{
-  StoreSDNode *SD = cast<StoreSDNode>(N);
-  return SD->getMemoryVT().getSizeInBits()/8 <= SD->getAlign().value();
-}]>;
-
-// Load/Store PatFrags.
-def load_a          : AlignedLoad<load>;
-def store_a         : AlignedStore<store>;
-
 // -------------------------------------------------- //
 // Very Prototype instruction set
 // -------------------------------------------------- //
 
-// Memory Load/Store
-let canFoldAsLoad = 1 in
-class LoadM<bits<6> func, string asm, PatFrag OpNode, RegisterClass RC,
-            Operand MemOpnd, bit Pseudo>:
-  FMem<func, (outs RC:$ra), (ins MemOpnd:$addr),
-     !strconcat(asm, "$ra, $addr"),
-     [(set RC:$ra, (OpNode addr:$addr))]> {
-  let isPseudo = Pseudo;
-}
-
-class StoreM<bits<6> func, string asm, PatFrag OpNode, RegisterClass RC,
-             Operand MemOpnd, bit Pseudo>:
-  FMem<func, (outs), (ins RC:$ra, MemOpnd:$addr),
-     !strconcat(asm, "\t$ra, $addr"),
-     [(OpNode RC:$ra, addr:$addr)]> {
-  let isPseudo = Pseudo;
-}
-
-//@ 32-bit load.
-class LoadM32<bits<6> func, string asm, PatFrag OpNode, bit Pseudo = 0>
-  : LoadM<func, asm, OpNode, GPR, mem, Pseudo> {
-}
-
-// 32-bit store.
-class StoreM32<bits<6> func, string asm, PatFrag OpNode, bit Pseudo = 0>
-  : StoreM<func, asm, OpNode, GPR, mem, Pseudo> {
-}
-
-/// Load and Store Instructions
-///  aligned
-def LD     : LoadM32<0x01,  "ld",  load_a>;
-def ST     : StoreM32<0x02, "st",  store_a>;
-
-def ADD_R : F_IR<0b110000,
+def ADD_I : F_IR<0b110000,
                 (outs GPROperand:$rd),
                 (ins GPROperand:$rs1, GPROperand:$rs2), 
                 "add $rd, $rs1, $rs2", 
                 [(set GPROperand:$rd, (add GPROperand:$rs1, GPROperand:$rs2))]>;
 
-def ADD_I : F_IR<0b110001,
-                (outs GPROperand:$rd),
-                (ins GPROperand:$rs1, simm32:$imm32), 
-                "add $rd, $rs1, $imm32", 
-                [(set GPROperand:$rd, (add GPROperand:$rs1, simm32:$imm32))]>;
 
 def LO16 : SDNodeXForm<imm, [{
   // Transformation function: get the low 16 bits.
