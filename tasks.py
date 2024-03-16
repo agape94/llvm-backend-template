@@ -49,14 +49,6 @@ def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=
     except OSError as e:
       # If it fails, inform the user.
       error(f"{e.filename} - {e.strerror}")
-  
-  print("Deleting unnecessary directories ...")
-  dirs_to_delete = ['bolt', 'compiler-rt', 'libc', 'libunwind', 'polly', 'libclc', 'llvm-libgcc', 'pstl', 'mlir', 'libcxx', 'cross-project-tests', 'flang', 'libcxxabi', 'lldb', 'openmp', 'runtimes', 'utils']
-  for dir in dirs_to_delete:
-    dir_path = os.path.join(extract_folder_path, dir)
-    if os.path.exists(dir_path):
-      shutil.rmtree(dir_path)
-      info(f"Deleted {dir_path}")
 
   env_folder_path = os.path.join(extract_path, repo_name)
   info(f"Renaming folder to {repo_name} ...")
