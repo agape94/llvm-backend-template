@@ -153,31 +153,7 @@ let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
 }
 
 // -------------------------------------------------- //
-// LOAD / STORE Instructions
+// LOAD / STORE instructions
 // -------------------------------------------------- //
+def ADDRrr : ComplexPattern<iPTR, 2, "SelectADDRrr", [], []>;
 
-// Define a ComplexPattern that matches a FrameIndex
-def FrameADDR : ComplexPattern<i32, "SelectFrameADDR_ri", (add, store)>;
-
-// Load/Store Instructions
-class LoadABS <bits<6> func, string asm, PatFrag PF> : F_DI<func,
-                (outs GPR:$rd),
-                (ins imm32:$memri), 
-                !strconcat(asm, " $rd, $memri"), 
-                [(set GPR:$rd, (i32 (PF imm:$memri)))]>;
-
-class LoadFI<bits<6> func, string asm> : F_DI<func,
-                (outs GPR:$rd),
-                (ins FrameADDR:$idx),
-                !strconcat(asm, " $rd, $idx"),
-                [(set GPR:$rd, (i32 (load (addressof (fiaddr $idx)))))]>;
-
-def LD_Wabs  : LoadABS<0b101010, "ld.w", load>;
-def LD_Wfi : LoadFI<0b101100, "ld.w.fi">;
-
-def ST_Wabs : F_MEM<0b010101, (ins GPR:$rs1, imm32:$memri),
-  "st.w $memri, $rs1",
-  [(store i32:$rs1, i32:$memri)]>;
-
-def : Pat<(store (load (addressof (fiaddr FrameADDR:$idx))), i32:$addr),
-          (ST_Wabs i32:$addr, (LD_Wfi FrameADDR:$idx))>;
