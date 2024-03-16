@@ -98,6 +98,11 @@ def ADD_R : F_IR<0b110000,
                 "add $rd, $rs1, $rs2", 
                 [(set GPROperand:$rd, (add GPROperand:$rs1, GPROperand:$rs2))]>;
 
+def ADD_I : F_II<0b111000,
+                (outs GPROperand:$rd),
+                (ins GPROperand:$rs1, imm16:$imm16), 
+                "add $rd, $rs1, $imm16", 
+                [(set GPROperand:$rd, (add GPROperand:$rs1, i32:$imm16))]>;
 
 def LO16 : SDNodeXForm<imm, [{
   // Transformation function: get the low 16 bits.

@@ -34,11 +34,41 @@ static MCDisassembler *createPrototypeDisassembler(const Target & /*T*/,
 
 template <int width>
 static DecodeStatus decodeSImmOperand(MCInst &Inst, uint64_t Imm, uint64_t Address, const void *Decoder) {
-  // Cast the immediate value to a 16-bit integer
-  int16_t Imm16 = static_cast<int16_t>(Imm);
+  if (width == 8) {
+    int8_t Imm8 = static_cast<int8_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm8));
+  } else if (width == 16) {
+    int16_t Imm16 = static_cast<int16_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm16));
+  } else if (width == 32) {
+    int32_t Imm32 = static_cast<int32_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm32));
+  } else if (width == 64) {
+    int64_t Imm64 = static_cast<int64_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm64));
+  } else {
+    return MCDisassembler::Fail;
+  }
+  return MCDisassembler::Success;
+}
 
-  // Add the immediate operand to the instruction
-  Inst.addOperand(MCOperand::createImm(Imm16));
+template <int width>
+static DecodeStatus decodeImmOperand(MCInst &Inst, uint64_t Imm, uint64_t Address, const void *Decoder) {
+  if (width == 8) {
+    uint8_t Imm8 = static_cast<uint8_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm8));
+  } else if (width == 16) {
+    uint16_t Imm16 = static_cast<uint16_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm16));
+  } else if (width == 32) {
+    uint32_t Imm32 = static_cast<uint32_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm32));
+  } else if (width == 64) {
+    uint64_t Imm64 = static_cast<uint64_t>(Imm);
+    Inst.addOperand(MCOperand::createImm(Imm64));
+  } else {
+    return MCDisassembler::Fail;
+  }
   return MCDisassembler::Success;
 }
 
