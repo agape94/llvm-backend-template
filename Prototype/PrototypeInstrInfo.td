@@ -88,6 +88,11 @@ def imm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getZExtValue());
   let DecoderMethod = "decodeImmOperand<32>";
 }
 
+def MEMrr : Operand<i32> {
+  let PrintMethod = "printMemOperand";
+  let MIOperandInfo = (ops GPR, GPR);
+}
+
 // -------------------------------------------------- //
 // Very Simple instruction set
 // -------------------------------------------------- //

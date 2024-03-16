@@ -54,6 +54,7 @@ public:
   void emitInstruction(const MachineInstr *MI) override;
   bool isBlockOnlyReachableByFallthrough(
       const MachineBasicBlock *MBB) const override;
+  void printMemOperand(const MachineInstr *MI, int opNum, raw_ostream &OS);
 
 private:
   void customEmitInstruction(const MachineInstr *MI);
@@ -111,7 +112,28 @@ void PrototypeAsmPrinter::printOperand(const MachineInstr *MI, int OpNum,
 bool PrototypeAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
                                       const char *ExtraCode, raw_ostream &O) {
   printOperand(MI, OpNo, O);
-  return false;
+  return true;
+}
+
+void PrototypeAsmPrinter::printMemOperand(const MachineInstr *MI, int OpNum, raw_ostream &O) {
+  const MachineOperand &MO = MI->getOperand(OpNum);
+
+  assert(MO.isReg() && "Expecting a register operand");
+
+  O << "[";
+  O << PrototypeInstPrinter::getRegisterName(MO.getReg());
+
+  if (MI->getNumOperands() > OpNum + 1) {
+    const MachineOperand &OffsetMO = MI->getOperand(OpNum + 1);
+    assert(OffsetMO.isImm() && "Expecting an immediate operand");
+    int64_t Offset = OffsetMO.getImm();
+    if (Offset > 0)
+      O << "+" << Offset;
+    else if (Offset < 0)
+      O << Offset;
+  }
+
+  O << "]";
 }
 
 //===----------------------------------------------------------------------===//
