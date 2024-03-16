@@ -51,6 +51,14 @@ class SImmAsmOperand<int width> : AsmOperandClass {
   //let DiagnosticType = !strconcat("Invalid", Name);
 }
 
+// Unsigned Immediate Operand Class
+class ImmAsmOperand<int width> : AsmOperandClass {
+  let Name = "Imm" # width;
+  let RenderMethod = "addImmOperands";
+  //let DiagnosticType = !strconcat("Invalid", Name);
+}
+
+// Signed Immediate Operands
 def simm16 : Operand<i32>, PatLeaf <(imm), [{return isInt<16>(N->getSExtValue());}]>
 {
   let ParserMatchClass = SImmAsmOperand<16>;
@@ -65,11 +73,26 @@ def simm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getSExtValue())
   let DecoderMethod = "decodeSImmOperand<32>";
 }
 
+// Unsigned Immediate Operands
+def imm16 : Operand<i32>, PatLeaf <(imm), [{return isInt<16>(N->getZExtValue());}]>
+{
+  let ParserMatchClass = ImmAsmOperand<16>;
+  let EncoderMethod = "getImmOpValue";
+  let DecoderMethod = "decodeImmOperand<16>";
+}
+
+def imm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getZExtValue());}]>
+{
+  let ParserMatchClass = ImmAsmOperand<32>;
+  let EncoderMethod = "getImmOpValue";
+  let DecoderMethod = "decodeImmOperand<32>";
+}
+
 // -------------------------------------------------- //
-// Very Prototype instruction set
+// Very Simple instruction set
 // -------------------------------------------------- //
 
-def ADD_I : F_IR<0b110000,
+def ADD_R : F_IR<0b110000,
                 (outs GPROperand:$rd),
                 (ins GPROperand:$rs1, GPROperand:$rs2), 
                 "add $rd, $rs1, $rs2", 
@@ -98,8 +121,8 @@ def immZExt16  : PatLeaf<(imm), [{
   return (uint64_t)N->getZExtValue() == (unsigned short)N->getZExtValue();
 }], LO16>;
 
-def LDI : F_DI<0b101000, (outs GPROperand:$rd), (ins simm16:$imm),
-                       "ld $rd, $imm",
+def MOV : F_DI<0b101000, (outs GPROperand:$rd), (ins simm16:$imm),
+                       "mov $rd, $imm",
                        [(set i32:$rd, imm16ShiftedSExt:$imm)]>;
 
 def ORI   : F_DI<0b100111, (outs GPROperand:$rd), (ins GPROperand:$RST, simm16:$imm),
@@ -108,7 +131,7 @@ def ORI   : F_DI<0b100111, (outs GPROperand:$rd), (ins GPROperand:$RST, simm16:$
 
 // Arbitrary immediate support.  Implement in terms of LIS/ORI.
 def : Pat<(i32 imm:$imm),
-          (ORI (LDI (HI16 imm:$imm)), (LO16 imm:$imm))>;
+          (ORI (MOV (HI16 imm:$imm)), (LO16 imm:$imm))>;
 
 let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
   def RET : PrototypeInst<(outs), (ins GPROperand:$rs),
@@ -118,3 +141,33 @@ let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
     let PostEncoderMethod = "";
   }
 }
+
+// -------------------------------------------------- //
+// LOAD / STORE Instructions
+// -------------------------------------------------- //
+
+// Define a ComplexPattern that matches a FrameIndex
+def FrameADDR : ComplexPattern<i32, "SelectFrameADDR_ri", (add, store)>;
+
+// Load/Store Instructions
+class LoadABS <bits<6> func, string asm, PatFrag PF> : F_DI<func,
+                (outs GPR:$rd),
+                (ins imm32:$memri), 
+                !strconcat(asm, " $rd, $memri"), 
+                [(set GPR:$rd, (i32 (PF imm:$memri)))]>;
+
+class LoadFI<bits<6> func, string asm> : F_DI<func,
+                (outs GPR:$rd),
+                (ins FrameADDR:$idx),
+                !strconcat(asm, " $rd, $idx"),
+                [(set GPR:$rd, (i32 (load (addressof (fiaddr $idx)))))]>;
+
+def LD_Wabs  : LoadABS<0b101010, "ld.w", load>;
+def LD_Wfi : LoadFI<0b101100, "ld.w.fi">;
+
+def ST_Wabs : F_MEM<0b010101, (ins GPR:$rs1, imm32:$memri),
+  "st.w $memri, $rs1",
+  [(store i32:$rs1, i32:$memri)]>;
+
+def : Pat<(store (load (addressof (fiaddr FrameADDR:$idx))), i32:$addr),
+          (ST_Wabs i32:$addr, (LD_Wfi FrameADDR:$idx))>;

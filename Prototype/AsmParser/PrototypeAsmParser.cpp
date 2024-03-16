@@ -195,6 +195,32 @@ public:
     return false;
   }
 
+    bool isImm16() const {
+    if (!isImm())
+      return false;
+    
+    // Constant case
+    if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
+      uint64_t Value = ConstExpr->getValue();
+      // Check if value fits in 16 bits or value of the form 0xffffxyzw
+      return isUInt<16>(static_cast<uint32_t>(Value));
+    }
+    return false;
+  }
+
+  bool isImm32() const {
+    if (!isImm())
+      return false;
+    
+    // Constant case
+    if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
+      uint64_t Value = ConstExpr->getValue();
+      // Check if value fits in 16 bits or value of the form 0xffffxyzw
+      return isUInt<32>(static_cast<uint32_t>(Value));
+    }
+    return false;
+  }
+
   bool isMem() const override {
     return Kind == MEMORY_IMM;
   }
