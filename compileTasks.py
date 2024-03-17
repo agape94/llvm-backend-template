@@ -15,6 +15,18 @@ def error (msg):
 
 # ==================================================================================================================
 
+def check_arguments(target_name, path, build_type):
+  if not target_name[0].isupper():
+    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
+  
+  if not os.path.exists(path) or len(os.listdir(path)) == 0:
+    raise ValueError(f"{path} is empty or doesn't exist")
+  
+  if not build_type in {"Debug", "Release"}:
+    raise ValueError(f"Please provide a valid build type (Debug or Release)")
+
+# ==================================================================================================================
+
 @task(aliases = ['b'], 
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips",
              "path": "Path to llvm source root. By default the current directory is considered",
@@ -26,16 +38,11 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Rele
   """
     Build the given target
   """
+  check_arguments(target_name, path, build_type)
 
-  if not target_name[0].isupper():
-    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
-
-  if not os.path.exists(path) or len(os.listdir(path)) == 0:
-    raise ValueError(f"{path} is empty or doesn't exist")
-
-  build_dir_name = f'build_{target_name}'
+  build_dir_name = f'build_{target_name}_{build_type}'
   build_dir = os.path.join(path, build_dir_name)
-
+  
   if os.getenv('CI') is not None:
     # I decided to implement my own caching solution because the official one is way too slow when the build folder is very large (like it is for LLVM)
     print("We are in CI mode. Try to copy the cache build folder if it exists...")
