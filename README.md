@@ -149,3 +149,7 @@ Notes:
   - The 32-bit result is splitted in two 16-bit values because the instructions are 32-bit wide, and the result would not fit into a single `ld` instruction. And so, the 16-bit `high` is loaded into the first 16-bits of the `R0` register and then a logical `or` with the `low` 16-bits ensures the whole 32-bit value is loaded into the `R0` register. 
   - `R1` is also a return register, but only for 64-bit values by combining `R1:R0` registers, with `R0` being `low` and `R1` being `high`.
   - The program then exits after the `ret` call.
+
+# Define Register Set and ISA
+- To define the register set of your target follow the instructions in [Define Register Set](docs/DefineRegisterSet.md)
+- To define the instruction set of your target follow the instructions in [Define ISA](docs/DefineInstructionSet.md.md)
