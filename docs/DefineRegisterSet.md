@@ -17,7 +17,7 @@ class SkeletonReg<bits<5> Enc, string n> : Register<n> {
 ```
 In this case, the registers are identified with 5-bit ID numbers. Please change the encoding according to your target specification. `TableGen` will generate a `C++` enum with the `Namespace` name. This enum will contain all the registers of this target. There are multiple properties you can define for a `Register`.
 
-> **Note** To see all the properties you can define for a `Register` refer to the `Register` class definition in `llvm/include/llvm/Target/Target.td`.
+> **Note** To see all the properties you can define for a `Register`, please refer to the `Register` class definition in `llvm/include/llvm/Target/Target.td`.
 
 ## Create registers
 `TableGen` provides an easy way of defining multiple objects of the same type by using a for loop as shown below, where we are definind 32 registers of type `SkeletonRegister` (which we defined in the [previous section](#create-a-register-class-that-defines-one-register)).
@@ -59,7 +59,7 @@ class SkeletonRegisterClass<list<ValueType> types, int size,
 | `copyCost`    | The cost of copying the register  |  
 
 Feel free to define as many of these classes as needed.
-> **Note** To see all properties you can define for a `RegisterClass` refer to the `RegisterClass` class definition in `llvm/include/llvm/Target/Target.td`.
+> **Note** To see all properties you can define for a `RegisterClass`, please refer to the `RegisterClass` class definition in `llvm/include/llvm/Target/Target.td`.
 
 ### Then we need to instantiate `SkeletonRegisterClass`
 Once we have the register class defined, we can create groupings of registers. For instance, we can group all the data registers together in a class called `GPR`, or `General Purpose Registers`, as shown below.
@@ -94,4 +94,4 @@ def GPROperand : SkeletonRegisterOperand<GPR>
 ```
 Here, we are creating the actual register operand class. This will reference all registers that are held by the `GPR` register class we [created before](#create-a-register-class-that-holds-all-related-registers). `GIZeroRegister` specifies which register always holds the value 0, if the target supports that. 
 
-> **Note** To see all properties you can define for a `RegisterOperand` refer to the `RegisterOperand` class definition in `llvm/include/llvm/Target/Target.td`.
+> **Note** To see all properties you can define for a `RegisterOperand`, please refer to the `RegisterOperand` class definition in `llvm/include/llvm/Target/Target.td`.
