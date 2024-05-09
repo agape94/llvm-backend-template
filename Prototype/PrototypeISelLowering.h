@@ -27,6 +27,10 @@ enum {
   // Return with a glue operand. Operand 0 is the chain operand.
   RET,
 
+  /// Wrapper - A wrapper node for TargetConstantPool, TargetExternalSymbol,
+  /// and TargetGlobalAddress.
+  Wrapper,
+
   // CALL - These operations represent an abstract call instruction, which
   // includes a bunch of information.
   // CALL
@@ -50,6 +54,8 @@ public:
                     const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
                     SelectionDAG &DAG) const override;
 
+  SDValue LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const;
+  SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
   const PrototypeRegisterInfo *TRI;
 };
 } // namespace llvm

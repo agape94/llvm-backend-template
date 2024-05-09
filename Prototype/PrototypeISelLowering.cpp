@@ -64,6 +64,37 @@ SDValue PrototypeTargetLowering::LowerFormalArguments(
   return Chain;
 }
 
+SDValue PrototypeTargetLowering::LowerFRAMEADDR(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  MachineFrameInfo &MFI = DAG.getMachineFunction().getFrameInfo();
+  MFI.setFrameAddressIsTaken(true);
+
+  EVT VT = Op.getValueType();
+  SDLoc DL(Op);
+  SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), DL, PROTOTYPE::R31, VT);
+  unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
+  while (Depth--) {
+    // const unsigned Offset = -8;
+    // SDValue Ptr = DAG.getNode(ISD::ADD, DL, VT, FrameAddr,
+    //                           DAG.getIntPtrConstant(Offset, DL));
+    FrameAddr =
+        DAG.getLoad(VT, DL, DAG.getEntryNode(), FrameAddr, MachinePointerInfo());
+  }
+  return FrameAddr;
+}
+
+SDValue PrototypeTargetLowering::LowerGlobalAddress(SDValue Op,
+                                                 SelectionDAG &DAG) const {
+  const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
+  int64_t Offset = cast<GlobalAddressSDNode>(Op)->getOffset();
+  EVT PtrVT = Op.getValueType();
+
+  // Create the TargetGlobalAddress node, folding in the constant offset.
+  SDValue Result = DAG.getTargetGlobalAddress(GV, SDLoc(Op), PtrVT, Offset);
+  return DAG.getNode(PrototypeISD::Wrapper, SDLoc(Op), PtrVT, Result);
+}
+
+
 SDValue PrototypeTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
     const SmallVectorImpl<ISD::OutputArg> &Outs,
     const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
