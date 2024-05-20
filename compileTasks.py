@@ -16,7 +16,7 @@ def error (msg):
 # ==================================================================================================================
 
 def check_arguments(target_name, path, build_type):
-  if not target_name[0].isupper():
+  if target_name is None or not target_name[0].isupper():
     raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
   
   if not os.path.exists(path) or len(os.listdir(path)) == 0:
@@ -40,7 +40,7 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Rele
   """
   check_arguments(target_name, path, build_type)
 
-  build_dir_name = f'build_{target_name}_{build_type}'
+  build_dir_name = f'build_{target_name.lower()}_{build_type.lower()}'
   build_dir = os.path.join(path, build_dir_name)
   
   if os.getenv('CI') is not None:
