@@ -58,6 +58,10 @@ class ImmAsmOperand<int width> : AsmOperandClass {
   //let DiagnosticType = !strconcat("Invalid", Name);
 }
 
+def MemAsmOperand : AsmOperandClass {
+  let Name = "Mem";
+}
+
 // Signed Immediate Operands
 def simm16 : Operand<i32>, PatLeaf <(imm), [{return isInt<16>(N->getSExtValue());}]>
 {
@@ -88,9 +92,21 @@ def imm32 : Operand<i32>, PatLeaf <(imm), [{return isInt<32>(N->getZExtValue());
   let DecoderMethod = "decodeImmOperand<32>";
 }
 
-def MEMrr : Operand<i32> {
-  let PrintMethod = "printMemOperand";
-  let MIOperandInfo = (ops GPR, GPR);
+// Address operands
+def memsrc : Operand<i16> {
+  let PrintMethod = "printSrcMemOperand";
+  let MIOperandInfo = (ops GPR, imm16);
+  let ParserMatchClass = MemAsmOperand;
+  let EncoderMethod = "getMemOpValue";
+  let DecoderMethod = "DecodeMemOperand";
+}
+
+def memdst : Operand<i16> {
+  let PrintMethod = "printSrcMemOperand";
+  let MIOperandInfo = (ops GPR, imm16);
+  let ParserMatchClass = MemAsmOperand;
+  let EncoderMethod = "getMemOpValue";
+  let DecoderMethod = "DecodeMemOperand";
 }
 
 // -------------------------------------------------- //
@@ -156,4 +172,13 @@ let isReturn = 1, isTerminator = 1, hasDelaySlot = 1, isBarrier = 1 in{
 // LOAD / STORE instructions
 // -------------------------------------------------- //
 def ADDRrr : ComplexPattern<iPTR, 2, "SelectADDRrr", [], []>;
+
+def STORE : F_MR<0b101100, (ins memdst:$dst, GPROperand:$rs),
+                    "st\t{$rs, $dst}",
+                    [(store GPROperand:$rs, ADDRrr:$dst)]>;
+
+def LOAD : F_RM<0b101101,
+                    (outs GPROperand:$rd), (ins memsrc:$src),
+                    "ld\t{$src, $rd}",
+                    [(set GPROperand:$rd, (load ADDRrr:$src))]>;
 

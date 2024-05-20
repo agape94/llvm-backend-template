@@ -53,6 +53,26 @@ class F_MEM<bits<6> func, dag ins, string asm, list<dag> pattern = []>
   let Inst{9-5} = rs1;
 }
 
+// Category: Destination memory location register
+class F_MR<bits<6> func, dag ins, string asm, list<dag> pattern = []>
+   : PrototypeInst<(outs), ins, asm, pattern> {
+  bits<5>  rs;
+  bits<5>  dst;
+  let Inst{31-26} = func;
+  let Inst{25-21} = dst;
+  let Inst{20-16} = rs;
+}
+
+// Category: Destination register from memory location register
+class F_RM<bits<6> func, dag outs, dag ins, string asm, list<dag> pattern = []>
+   : PrototypeInst<outs, ins, asm, pattern> {
+  bits<5>  rs;
+  bits<5>  dst;
+  let Inst{31-26} = func;
+  let Inst{25-21} = dst;
+  let Inst{20-16} = rs;
+}
+
 // Category: Destination register and 16-bit immediate
 class F_DI<bits<6> func, dag outs, dag ins, string asm, list<dag> pattern = []>
    : F_D<outs, ins, asm, pattern> {

@@ -45,6 +45,29 @@ void PrototypeInstPrinter::printOperand(const MCInst *MI, unsigned OpNo,
   }
 }
 
+void PrototypeInstPrinter::printSrcMemOperand(const MCInst *MI, unsigned OpNo,
+                                           raw_ostream &O) {
+  const MCOperand &Base = MI->getOperand(OpNo);
+  const MCOperand &Disp = MI->getOperand(OpNo+1);
+
+  // Print register base field
+  if ((Base.getReg() != PROTOTYPE::R1) &&
+      (Base.getReg() != PROTOTYPE::R0))
+    O << "%" << getRegisterName(Base.getReg());
+
+  // Print displacement field
+  if (Disp.isExpr())
+    Disp.getExpr()->print(O, &MAI);
+  else if (Disp.isReg())
+  {
+    O << "(" << getRegisterName(Disp.getReg()) << ")";
+  }
+  else {
+    assert(Disp.isImm() && "Expected immediate in displacement field");
+    O << "(" << Disp.getImm() << ")";
+  }
+}
+
 void PrototypeInstPrinter::printMemOperand(const MCInst *MI, int opNum,
                        raw_ostream &OS, const char *Modifier) {
   // If this is an ADD operand, emit it like normal operands.

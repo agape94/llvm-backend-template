@@ -164,6 +164,24 @@ public:
     assert(N == 1 && "Invalid number of operands!");
   }
 
+  void addExprOperand(MCInst &Inst, const MCExpr *Expr) const {
+    // Add as immediate when possible
+    if (!Expr)
+      Inst.addOperand(MCOperand::createImm(0));
+    else if (const MCConstantExpr *CE = dyn_cast<MCConstantExpr>(Expr))
+      Inst.addOperand(MCOperand::createImm(CE->getValue()));
+    else
+      Inst.addOperand(MCOperand::createExpr(Expr));
+  }
+
+  void addMemOperands(MCInst &Inst, unsigned N) const {
+    assert(Kind == MEMORY_REG_IMM && "Unexpected operand kind");
+    assert(N == 2 && "Invalid number of operands");
+
+    Inst.addOperand(MCOperand::createReg(Mem.BaseReg));
+    addExprOperand(Inst, Mem.Offset);
+  }
+
   // Functions for testing operand type
   bool isReg() const override { return Kind == REGISTER; }
 

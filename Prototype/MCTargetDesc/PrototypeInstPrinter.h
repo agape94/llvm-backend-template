@@ -37,6 +37,8 @@ public:
                        raw_ostream &OS, const char *Modifier = nullptr);
   static const char *getRegisterName(MCRegister Reg);
   bool printAliasInstr(const MCInst *MI, uint64_t Address, raw_ostream &OS);
+  void printSrcMemOperand(const MCInst *MI, unsigned OpNo,
+                                           raw_ostream &O);
 };
 
 } // end namespace llvm
