@@ -116,8 +116,6 @@ void PrototypeDAGToDAGISel::selectFrameIndex(SDNode *SN, SDNode *N, uint64_t Off
                                           getI16Imm(CurStackOffset, dl)));
 }
 
-// createLanaiISelDag - This pass converts a legalized DAG into a
-// Lanai-specific DAG, ready for instruction scheduling.
 FunctionPass *llvm::createPrototypeISelDag(PrototypeTargetMachine &TM) {
   return new PrototypeDAGToDAGISel(TM);
 }
