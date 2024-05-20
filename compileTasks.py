@@ -78,7 +78,6 @@ def build_target(c, target_name, path=".", upstream_targets="", build_type="Rele
     
   info(f"Build command: {build_command}")
   info(f"Building target {target_name} ...")
-  info("Please be patient as this may take 60 minutes or more depending on your hardware ...")
   process = subprocess.Popen(build_command, shell=True)
   # Wait for the subprocess to complete
   process.wait()
