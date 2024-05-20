@@ -12,7 +12,6 @@
 
 #include "SkeletonInstrInfo.h"
 #include "SkeletonAluCode.h"
-#include "SkeletonCondCode.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"

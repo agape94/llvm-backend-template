@@ -12,7 +12,6 @@
 //===----------------------------------------------------------------------===//
 
 #include "SkeletonAluCode.h"
-#include "SkeletonCondCode.h"
 #include "SkeletonInstrInfo.h"
 #include "SkeletonMCInstLower.h"
 #include "SkeletonTargetMachine.h"
@@ -115,27 +114,6 @@ bool SkeletonAsmPrinter::PrintAsmOperand(const MachineInstr *MI, unsigned OpNo,
   return true;
 }
 
-void SkeletonAsmPrinter::printMemOperand(const MachineInstr *MI, int OpNum, raw_ostream &O) {
-  const MachineOperand &MO = MI->getOperand(OpNum);
-
-  assert(MO.isReg() && "Expecting a register operand");
-
-  O << "[";
-  O << SkeletonInstPrinter::getRegisterName(MO.getReg());
-
-  if (MI->getNumOperands() > OpNum + 1) {
-    const MachineOperand &OffsetMO = MI->getOperand(OpNum + 1);
-    assert(OffsetMO.isImm() && "Expecting an immediate operand");
-    int64_t Offset = OffsetMO.getImm();
-    if (Offset > 0)
-      O << "+" << Offset;
-    else if (Offset < 0)
-      O << Offset;
-  }
-
-  O << "]";
-}
-
 //===----------------------------------------------------------------------===//
 
 void SkeletonAsmPrinter::emitInstruction(const MachineInstr *MI) {
@@ -146,10 +124,6 @@ void SkeletonAsmPrinter::emitInstruction(const MachineInstr *MI) {
   OutStreamer->emitInstruction(TmpInst, STI);
 }
 
-// isBlockOnlyReachableByFallthough - Return true if the basic block has
-// exactly one predecessor and the control transfer mechanism between
-// the predecessor and this block is a fall-through.
-// FIXME: could the overridden cases be handled in analyzeBranch?
 bool SkeletonAsmPrinter::isBlockOnlyReachableByFallthrough(
     const MachineBasicBlock *MBB) const {
 return false;

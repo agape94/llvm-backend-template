@@ -14,23 +14,7 @@
 // Return Value Calling Conventions
 //===----------------------------------------------------------------------===//
 
-// Skeleton 32-bit C Calling convention.
-def CC_Skeleton32 : CallingConv<[
-  // Promote i8/i16 args to i32
-  CCIfType<[i8, i16], CCPromoteToType<i32>>,
-
-  // Put argument in registers if marked 'inreg' and not a vararg call.
-  CCIfNotVarArg<CCIfInReg<CCIfType<[i32],
-                                   CCAssignToReg<[R2, R3, R4]>>>>,
-
-  // Otherwise they are assigned to the stack in 4-byte aligned units.
-  CCAssignToStack<4, 4>
-]>;
-// Skeleton 32-bit C return-value convention.
-def RetCC_Skeleton32 : CallingConv<[
-  // Specify two registers to allow returning 64-bit results that have already
-  // been lowered to 2 32-bit values.
-  CCIfType<[i32], CCAssignToReg<[R0, R1]>>
-]>;
-
-def CSR: CalleeSavedRegs<(add)>;
+// Skeleton C Calling convention.
+def CC_Skeleton : CallingConv<[]>;
+// Skeleton C return-value convention.
+def RetCC_Skeleton : CallingConv<[]>;

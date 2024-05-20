@@ -53,9 +53,6 @@ public:
                     const SmallVectorImpl<ISD::OutputArg> &Outs,
                     const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
                     SelectionDAG &DAG) const override;
-
-  SDValue LowerFRAMEADDR(SDValue Op, SelectionDAG &DAG) const;
-  SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
   const SkeletonRegisterInfo *TRI;
 };
 } // namespace llvm

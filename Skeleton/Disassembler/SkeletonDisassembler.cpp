@@ -13,7 +13,6 @@
 #include "SkeletonDisassembler.h"
 
 #include "SkeletonAluCode.h"
-#include "SkeletonCondCode.h"
 #include "SkeletonInstrInfo.h"
 #include "TargetInfo/SkeletonTargetInfo.h"
 #include "llvm/MC/MCDecoderOps.h"

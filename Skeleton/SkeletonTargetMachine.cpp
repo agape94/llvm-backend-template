@@ -41,14 +41,16 @@ extern "C" LLVM_EXTERNAL_VISIBILITY void LLVMInitializeSkeletonTarget() {
 }
 
 static std::string computeDataLayout() {
-  // Data layout (keep in sync with clang/lib/Basic/Targets.cpp)
-  return "E"        // Big endian
-         "-m:e"     // ELF name manging
-         "-p:32:32" // 32-bit pointers, 32 bit aligned
-         "-i64:64"  // 64 bit integers, 64 bit aligned
-         "-a:0:32"  // 32 bit alignment of objects of aggregate type
-         "-n32"     // 32 bit native integer width
-         "-S64";    // 64 bit natural stack alignment
+  // Here you have to define the data layout for your target. Here is an example:
+  // return "E"        // Big endian
+  //        "-m:e"     // ELF name manging
+  //        "-p:32:32" // 32-bit pointers, 32 bit aligned
+  //        "-i64:64"  // 64 bit integers, 64 bit aligned
+  //        "-a:0:32"  // 32 bit alignment of objects of aggregate type
+  //        "-n32"     // 32 bit native integer width
+  //        "-S64";    // 64 bit natural stack alignment
+  // The Data layout has to be kept in sync with clang/lib/Basic/Targets.cpp
+  return "";
 }
 
 static Reloc::Model getEffectiveRelocModel(std::optional<Reloc::Model> RM) {

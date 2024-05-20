@@ -78,10 +78,7 @@ struct SkeletonOperand : public MCParsedAsmOperand {
   enum KindTy {
     TOKEN,
     REGISTER,
-    IMMEDIATE,
-    MEMORY_IMM,
-    MEMORY_REG_IMM,
-    MEMORY_REG_REG,
+    IMMEDIATE
   } Kind;
 
     struct Token {
@@ -164,23 +161,9 @@ public:
     assert(N == 1 && "Invalid number of operands!");
   }
 
-  void addExprOperand(MCInst &Inst, const MCExpr *Expr) const {
-    // Add as immediate when possible
-    if (!Expr)
-      Inst.addOperand(MCOperand::createImm(0));
-    else if (const MCConstantExpr *CE = dyn_cast<MCConstantExpr>(Expr))
-      Inst.addOperand(MCOperand::createImm(CE->getValue()));
-    else
-      Inst.addOperand(MCOperand::createExpr(Expr));
-  }
+  void addExprOperand(MCInst &Inst, const MCExpr *Expr) const {}
 
-  void addMemOperands(MCInst &Inst, unsigned N) const {
-    assert(Kind == MEMORY_REG_IMM && "Unexpected operand kind");
-    assert(N == 2 && "Invalid number of operands");
-
-    Inst.addOperand(MCOperand::createReg(Mem.BaseReg));
-    addExprOperand(Inst, Mem.Offset);
-  }
+  void addMemOperands(MCInst &Inst, unsigned N) const {}
 
   // Functions for testing operand type
   bool isReg() const override { return Kind == REGISTER; }
@@ -195,7 +178,7 @@ public:
     if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
       int64_t Value = ConstExpr->getValue();
       // Check if value fits in 16 bits or value of the form 0xffffxyzw
-      return isInt<16>(static_cast<int32_t>(Value));
+      return isInt<16>(static_cast<int16_t>(Value));
     }
     return false;
   }
@@ -221,7 +204,7 @@ public:
     if (const MCConstantExpr *ConstExpr = dyn_cast<MCConstantExpr>(Imm.Value)) {
       uint64_t Value = ConstExpr->getValue();
       // Check if value fits in 16 bits or value of the form 0xffffxyzw
-      return isUInt<16>(static_cast<uint32_t>(Value));
+      return isUInt<16>(static_cast<uint16_t>(Value));
     }
     return false;
   }
@@ -239,10 +222,6 @@ public:
     return false;
   }
 
-  bool isMem() const override {
-    return Kind == MEMORY_IMM;
-  }
-
   bool isToken() const override { return Kind == TOKEN; }
 
   void print(raw_ostream &OS) const override {
@@ -255,17 +234,6 @@ public:
       break;
     case REGISTER:
       OS << "Reg: %r" << getReg() << "\n";
-      break;
-    case MEMORY_IMM:
-      OS << "MemImm: " << *getMemOffset() << "\n";
-      break;
-    case MEMORY_REG_IMM:
-      OS << "MemRegImm: " << getMemBaseReg() << "+" << *getMemOffset() << "\n";
-      break;
-    case MEMORY_REG_REG:
-      assert(getMemOffset() == nullptr);
-      OS << "MemRegReg: " << getMemBaseReg() << "+"
-         << "%r" << getMemOffsetReg() << "\n";
       break;
     }
   }

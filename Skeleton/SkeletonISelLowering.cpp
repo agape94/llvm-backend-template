@@ -12,7 +12,6 @@
 
 #include "SkeletonISelLowering.h"
 #include "Skeleton.h"
-#include "SkeletonCondCode.h"
 #include "SkeletonMachineFunctionInfo.h"
 #include "SkeletonSubtarget.h"
 #include "SkeletonTargetObjectFile.h"
@@ -64,77 +63,12 @@ SDValue SkeletonTargetLowering::LowerFormalArguments(
   return Chain;
 }
 
-SDValue SkeletonTargetLowering::LowerFRAMEADDR(SDValue Op,
-                                            SelectionDAG &DAG) const {
-  MachineFrameInfo &MFI = DAG.getMachineFunction().getFrameInfo();
-  MFI.setFrameAddressIsTaken(true);
-
-  EVT VT = Op.getValueType();
-  SDLoc DL(Op);
-  SDValue FrameAddr = DAG.getCopyFromReg(DAG.getEntryNode(), DL, SKELETON::R31, VT);
-  unsigned Depth = cast<ConstantSDNode>(Op.getOperand(0))->getZExtValue();
-  while (Depth--) {
-    // const unsigned Offset = -8;
-    // SDValue Ptr = DAG.getNode(ISD::ADD, DL, VT, FrameAddr,
-    //                           DAG.getIntPtrConstant(Offset, DL));
-    FrameAddr =
-        DAG.getLoad(VT, DL, DAG.getEntryNode(), FrameAddr, MachinePointerInfo());
-  }
-  return FrameAddr;
-}
-
-SDValue SkeletonTargetLowering::LowerGlobalAddress(SDValue Op,
-                                                 SelectionDAG &DAG) const {
-  const GlobalValue *GV = cast<GlobalAddressSDNode>(Op)->getGlobal();
-  int64_t Offset = cast<GlobalAddressSDNode>(Op)->getOffset();
-  EVT PtrVT = Op.getValueType();
-
-  // Create the TargetGlobalAddress node, folding in the constant offset.
-  SDValue Result = DAG.getTargetGlobalAddress(GV, SDLoc(Op), PtrVT, Offset);
-  return DAG.getNode(SkeletonISD::Wrapper, SDLoc(Op), PtrVT, Result);
-}
-
-
 SDValue SkeletonTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv, bool IsVarArg,
     const SmallVectorImpl<ISD::OutputArg> &Outs,
     const SmallVectorImpl<SDValue> &OutVals, const SDLoc &DL,
     SelectionDAG &DAG) const  
 {
-  SDValue Flag;
-  SmallVector<SDValue, 4> RetOps(1, Chain);
-
-  if (Outs.size() >= SKELETON::GPRRegClass.getNumRegs())
-  {
-    assert(!"not implemented");
-    return SDValue();
-  }
-
-  // Return is always ret 0
-  RetOps.push_back(DAG.getConstant(0, DL, MVT::i32));
-
-  // Build CopyToReg's
-  for (unsigned i = 0; i != Outs.size(); ++i) 
-  {
-    if (Outs[i].VT.SimpleTy != MVT::i32)
-      assert(!"not implemented");
-
-    unsigned loc_reg = SKELETON::GPRRegClass.getRegister(i);
-
-    Chain = DAG.getCopyToReg(Chain, DL, loc_reg,
-    OutVals[i], Flag);
-
-    Flag = Chain.getValue(1);
-    RetOps.push_back(DAG.getRegister(loc_reg, Outs[i].VT));
-  }
-
-  RetOps[0] = Chain;  // Update chain.
-
-  // Add the flag if we have it.
-  if (Flag.getNode())
-    RetOps.push_back(Flag);
-
-  return DAG.getNode(SkeletonISD::RET, DL, MVT::Other,
-    ArrayRef<SDValue>(&RetOps[0], RetOps.size()));
+  return SDValue();
 }
 
 const char *SkeletonTargetLowering::getTargetNodeName(unsigned Opcode) const

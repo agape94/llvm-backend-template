@@ -12,7 +12,6 @@
 
 #include "SkeletonRegisterInfo.h"
 #include "SkeletonAluCode.h"
-#include "SkeletonCondCode.h"
 #include "SkeletonFrameLowering.h"
 #include "SkeletonInstrInfo.h"
 #include "llvm/ADT/BitVector.h"
@@ -53,25 +52,6 @@ BitVector SkeletonRegisterInfo::getReservedRegs(const MachineFunction &MF) const
 bool SkeletonRegisterInfo::eliminateFrameIndex(MachineBasicBlock::iterator II,
                                             int SPAdj, unsigned FIOperandNum,
                                             RegScavenger *RS) const {
-  MachineInstr &MI = *II;
-  MachineFunction &MF = *MI.getParent()->getParent();
-  MachineFrameInfo &MFI = MF.getFrameInfo();
-  int FrameIndex = MI.getOperand(FIOperandNum).getIndex();
-  uint64_t StackSize = MFI.getStackSize();
-  int64_t Offset = MFI.getObjectOffset(FrameIndex) + StackSize;
-
-  const TargetInstrInfo &TII = *MF.getSubtarget().getInstrInfo();
-  DebugLoc dl = II->getDebugLoc();
-  Register DstReg = MI.getOperand(0).getReg();
-
-  // Materialize the offset via an ADD_I instruction.
-  BuildMI(MF, dl, TII.get(SKELETON::MOV), DstReg)
-    // .addReg(SKELETON::R2)  // Assuming R2 is the stack pointer.
-    .addImm(Offset);
-
-  // Replace the FrameIndex with the register that holds the actual memory address.
-  MI.getOperand(FIOperandNum).ChangeToRegister(DstReg, false);
-
   // true indicates that we changed the instruction.
   return true;
 }

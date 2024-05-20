@@ -6,22 +6,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-def ALU_FU  : FuncUnit;
-def LDST_FU : FuncUnit;
-
-def IIC_ALU  : InstrItinClass;
-def IIC_LD   : InstrItinClass;
-def IIC_ST   : InstrItinClass;
-def IIC_LDSW : InstrItinClass;
-def IIC_STSW : InstrItinClass;
-
-def SkeletonItinerary : ProcessorItineraries<[ALU_FU, LDST_FU],[],[
-  InstrItinData<IIC_LD,   [InstrStage<1, [LDST_FU]>]>,
-  InstrItinData<IIC_ST,   [InstrStage<1, [LDST_FU]>]>,
-  InstrItinData<IIC_LDSW, [InstrStage<2, [LDST_FU]>]>,
-  InstrItinData<IIC_STSW, [InstrStage<2, [LDST_FU]>]>,
-  InstrItinData<IIC_ALU,  [InstrStage<1, [ALU_FU]>]>
-]>;
+def SkeletonItinerary : ProcessorItineraries<[],[],[]>;
 
 def SkeletonSchedModel : SchedMachineModel {
   // Cycles for loads to access the cache [default = -1]
@@ -49,21 +34,4 @@ def SkeletonSchedModel : SchedMachineModel {
 
   // Per-cycle resources tables. [default = NoItineraries]
   let Itineraries = SkeletonItinerary;
-}
-
-def ALU : ProcResource<1> { let BufferSize = 0; }
-def LdSt : ProcResource<1> { let BufferSize = 0; }
-
-def WriteLD   : SchedWrite;
-def WriteST   : SchedWrite;
-def WriteLDSW : SchedWrite;
-def WriteSTSW : SchedWrite;
-def WriteALU  : SchedWrite;
-
-let SchedModel = SkeletonSchedModel in {
-  def : WriteRes<WriteLD, [LdSt]>   { let Latency = 2; }
-  def : WriteRes<WriteST, [LdSt]>   { let Latency = 2; }
-  def : WriteRes<WriteLDSW, [LdSt]> { let Latency = 2; }
-  def : WriteRes<WriteSTSW, [LdSt]> { let Latency = 4; }
-  def : WriteRes<WriteALU, [ALU]>   { let Latency = 1; }
 }
