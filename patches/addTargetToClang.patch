@@ -6,7 +6,7 @@ index caa1b6002..5f52d86e7 100644
    Targets/DirectX.cpp
    Targets/Hexagon.cpp
    Targets/Lanai.cpp
-+  Targets/Prototype.cpp
++  Targets/Skeleton.cpp
    Targets/Le64.cpp
    Targets/LoongArch.cpp
    Targets/M68k.cpp
@@ -18,7 +18,7 @@ index 636b59fd1..6485fde49 100644
  #include "Targets/DirectX.h"
  #include "Targets/Hexagon.h"
  #include "Targets/Lanai.h"
-+#include "Targets/Prototype.h"
++#include "Targets/Skeleton.h"
  #include "Targets/Le64.h"
  #include "Targets/LoongArch.h"
  #include "Targets/M68k.h"
@@ -26,19 +26,19 @@ index 636b59fd1..6485fde49 100644
    case llvm::Triple::lanai:
      return std::make_unique<LanaiTargetInfo>(Triple, Opts);
  
-+  case llvm::Triple::prototype:
-+    return std::make_unique<PrototypeTargetInfo>(Triple, Opts);
++  case llvm::Triple::skeleton:
++    return std::make_unique<SkeletonTargetInfo>(Triple, Opts);
 +
    case llvm::Triple::aarch64_32:
      if (Triple.isOSDarwin())
        return std::make_unique<DarwinAArch64TargetInfo>(Triple, Opts);
-diff --git a/clang/lib/Basic/Targets/Prototype.cpp b/clang/lib/Basic/Targets/Prototype.cpp
+diff --git a/clang/lib/Basic/Targets/Skeleton.cpp b/clang/lib/Basic/Targets/Skeleton.cpp
 new file mode 100644
 index 000000000..290624637
 --- /dev/null
-+++ b/clang/lib/Basic/Targets/Prototype.cpp
++++ b/clang/lib/Basic/Targets/Skeleton.cpp
 @@ -0,0 +1,70 @@
-+//===--- Prototype.cpp - Implement Prototype target feature support ---------------===//
++//===--- Skeleton.cpp - Implement Skeleton target feature support ---------------===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -46,75 +46,75 @@ index 000000000..290624637
 +//
 +//===----------------------------------------------------------------------===//
 +//
-+// This file implements Prototype TargetInfo objects.
++// This file implements Skeleton TargetInfo objects.
 +//
 +//===----------------------------------------------------------------------===//
 +
-+#include "Prototype.h"
++#include "Skeleton.h"
 +#include "clang/Basic/MacroBuilder.h"
 +#include "llvm/ADT/StringSwitch.h"
 +
 +using namespace clang;
 +using namespace clang::targets;
 +
-+const char *const PrototypeTargetInfo::GCCRegNames[] = {
++const char *const SkeletonTargetInfo::GCCRegNames[] = {
 +    "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",  "r8",  "r9",  "r10",
 +    "r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20", "r21",
 +    "r22", "r23", "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31"
 +};
 +
-+ArrayRef<const char *> PrototypeTargetInfo::getGCCRegNames() const {
++ArrayRef<const char *> SkeletonTargetInfo::getGCCRegNames() const {
 +  return llvm::ArrayRef(GCCRegNames);
 +}
 +
-+const TargetInfo::GCCRegAlias PrototypeTargetInfo::GCCRegAliases[] = {
++const TargetInfo::GCCRegAlias SkeletonTargetInfo::GCCRegAliases[] = {
 +    {{"pc"}, "r2"},   {{"sp"}, "r4"},   {{"fp"}, "r5"},   {{"rv"}, "r8"},
 +    {{"rr1"}, "r10"}, {{"rr2"}, "r11"}, {{"rca"}, "r15"},
 +};
 +
-+ArrayRef<TargetInfo::GCCRegAlias> PrototypeTargetInfo::getGCCRegAliases() const {
++ArrayRef<TargetInfo::GCCRegAlias> SkeletonTargetInfo::getGCCRegAliases() const {
 +  return llvm::ArrayRef(GCCRegAliases);
 +}
 +
-+bool PrototypeTargetInfo::isValidCPUName(StringRef Name) const {
++bool SkeletonTargetInfo::isValidCPUName(StringRef Name) const {
 +  return llvm::StringSwitch<bool>(Name).Case("v11", true).Default(false);
 +}
-+void PrototypeTargetInfo::fillValidCPUList(
++void SkeletonTargetInfo::fillValidCPUList(
 +    SmallVectorImpl<StringRef> &Values) const {
 +  Values.emplace_back("v11");
 +}
 +
-+bool PrototypeTargetInfo::setCPU(const std::string &Name) {
++bool SkeletonTargetInfo::setCPU(const std::string &Name) {
 +  CPU = llvm::StringSwitch<CPUKind>(Name).Case("v11", CK_V11).Default(CK_NONE);
 +
 +  return CPU != CK_NONE;
 +}
 +
-+bool PrototypeTargetInfo::hasFeature(StringRef Feature) const {
-+  return llvm::StringSwitch<bool>(Feature).Case("prototype", true).Default(false);
++bool SkeletonTargetInfo::hasFeature(StringRef Feature) const {
++  return llvm::StringSwitch<bool>(Feature).Case("skeleton", true).Default(false);
 +}
 +
-+void PrototypeTargetInfo::getTargetDefines(const LangOptions &Opts,
++void SkeletonTargetInfo::getTargetDefines(const LangOptions &Opts,
 +                                       MacroBuilder &Builder) const {
-+  // Define __prototype__ when building for target prototype.
-+  Builder.defineMacro("__prototype__");
++  // Define __skeleton__ when building for target skeleton.
++  Builder.defineMacro("__skeleton__");
 +
 +  // Set define for the CPU specified.
 +  switch (CPU) {
 +  case CK_V11:
-+    Builder.defineMacro("__PROTOTYPE_V11__");
++    Builder.defineMacro("__SKELETON_V11__");
 +    break;
 +  case CK_NONE:
 +    llvm_unreachable("Unhandled target CPU");
 +  }
 +}
-diff --git a/clang/lib/Basic/Targets/Prototype.h b/clang/lib/Basic/Targets/Prototype.h
+diff --git a/clang/lib/Basic/Targets/Skeleton.h b/clang/lib/Basic/Targets/Skeleton.h
 new file mode 100644
 index 000000000..9700e8cc5
 --- /dev/null
-+++ b/clang/lib/Basic/Targets/Prototype.h
++++ b/clang/lib/Basic/Targets/Skeleton.h
 @@ -0,0 +1,97 @@
-+//===--- Prototype.h - Declare Prototype target feature support ---------*- C++ -*-===//
++//===--- Skeleton.h - Declare Skeleton target feature support ---------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -122,12 +122,12 @@ index 000000000..9700e8cc5
 +//
 +//===----------------------------------------------------------------------===//
 +//
-+// This file declares Prototype TargetInfo objects.
++// This file declares Skeleton TargetInfo objects.
 +//
 +//===----------------------------------------------------------------------===//
 +
-+#ifndef LLVM_CLANG_LIB_BASIC_TARGETS_PROTOTYPE_H
-+#define LLVM_CLANG_LIB_BASIC_TARGETS_PROTOTYPE_H
++#ifndef LLVM_CLANG_LIB_BASIC_TARGETS_SKELETON_H
++#define LLVM_CLANG_LIB_BASIC_TARGETS_SKELETON_H
 +
 +#include "clang/Basic/TargetInfo.h"
 +#include "clang/Basic/TargetOptions.h"
@@ -137,9 +137,9 @@ index 000000000..9700e8cc5
 +namespace clang {
 +namespace targets {
 +
-+class LLVM_LIBRARY_VISIBILITY PrototypeTargetInfo : public TargetInfo {
-+  // Class for Prototype (32-bit).
-+  // The CPU profiles supported by the Prototype backend
++class LLVM_LIBRARY_VISIBILITY SkeletonTargetInfo : public TargetInfo {
++  // Class for Skeleton (32-bit).
++  // The CPU profiles supported by the Skeleton backend
 +  enum CPUKind {
 +    CK_NONE,
 +    CK_V11,
@@ -149,7 +149,7 @@ index 000000000..9700e8cc5
 +  static const char *const GCCRegNames[];
 +
 +public:
-+  PrototypeTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
++  SkeletonTargetInfo(const llvm::Triple &Triple, const TargetOptions &)
 +      : TargetInfo(Triple) {
 +    // Description string has to be kept in sync with backend.
 +    resetDataLayout("E"        // Big endian
@@ -210,7 +210,7 @@ index 000000000..9700e8cc5
 +} // namespace targets
 +} // namespace clang
 +
-+#endif // LLVM_CLANG_LIB_BASIC_TARGETS_PROTOTYPE_H
++#endif // LLVM_CLANG_LIB_BASIC_TARGETS_SKELETON_H
 diff --git a/clang/lib/CodeGen/CMakeLists.txt b/clang/lib/CodeGen/CMakeLists.txt
 index 1debeb6d9..2faac86e5 100644
 --- a/clang/lib/CodeGen/CMakeLists.txt
@@ -219,7 +219,7 @@ index 1debeb6d9..2faac86e5 100644
    Targets/CSKY.cpp
    Targets/Hexagon.cpp
    Targets/Lanai.cpp
-+  Targets/Prototype.cpp
++  Targets/Skeleton.cpp
    Targets/LoongArch.cpp
    Targets/M68k.cpp
    Targets/MSP430.cpp
@@ -231,8 +231,8 @@ index f09d1129b..d63f0266f 100644
      return createHexagonTargetCodeGenInfo(CGM);
    case llvm::Triple::lanai:
      return createLanaiTargetCodeGenInfo(CGM);
-+  case llvm::Triple::prototype:
-+    return createPrototypeTargetCodeGenInfo(CGM);
++  case llvm::Triple::skeleton:
++    return createSkeletonTargetCodeGenInfo(CGM);
    case llvm::Triple::r600:
      return createAMDGPUTargetCodeGenInfo(CGM);
    case llvm::Triple::amdgcn:
@@ -245,18 +245,18 @@ index 14ed5e5d2..5f45e15a0 100644
  createLanaiTargetCodeGenInfo(CodeGenModule &CGM);
  
 +std::unique_ptr<TargetCodeGenInfo>
-+createPrototypeTargetCodeGenInfo(CodeGenModule &CGM);
++createSkeletonTargetCodeGenInfo(CodeGenModule &CGM);
 +
  std::unique_ptr<TargetCodeGenInfo>
  createLoongArchTargetCodeGenInfo(CodeGenModule &CGM, unsigned GRLen,
                                   unsigned FLen);
-diff --git a/clang/lib/CodeGen/Targets/Prototype.cpp b/clang/lib/CodeGen/Targets/Prototype.cpp
+diff --git a/clang/lib/CodeGen/Targets/Skeleton.cpp b/clang/lib/CodeGen/Targets/Skeleton.cpp
 new file mode 100644
 index 000000000..bbf93a465
 --- /dev/null
-+++ b/clang/lib/CodeGen/Targets/Prototype.cpp
++++ b/clang/lib/CodeGen/Targets/Skeleton.cpp
 @@ -0,0 +1,154 @@
-+//===- Prototype.cpp ----------------------------------------------------------===//
++//===- Skeleton.cpp ----------------------------------------------------------===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -271,23 +271,23 @@ index 000000000..bbf93a465
 +using namespace clang::CodeGen;
 +
 +//===----------------------------------------------------------------------===//
-+// Prototype ABI Implementation
++// Skeleton ABI Implementation
 +//===----------------------------------------------------------------------===//
 +
 +namespace {
-+class PrototypeABIInfo : public DefaultABIInfo {
++class SkeletonABIInfo : public DefaultABIInfo {
 +  struct CCState {
 +    unsigned FreeRegs;
 +  };
 +
 +public:
-+  PrototypeABIInfo(CodeGen::CodeGenTypes &CGT) : DefaultABIInfo(CGT) {}
++  SkeletonABIInfo(CodeGen::CodeGenTypes &CGT) : DefaultABIInfo(CGT) {}
 +
 +  bool shouldUseInReg(QualType Ty, CCState &State) const;
 +
 +  void computeInfo(CGFunctionInfo &FI) const override {
 +    CCState State;
-+    // Prototype uses 4 registers to pass arguments unless the function has the
++    // Skeleton uses 4 registers to pass arguments unless the function has the
 +    // regparm attribute set.
 +    if (FI.getHasRegParm()) {
 +      State.FreeRegs = FI.getRegParm();
@@ -306,7 +306,7 @@ index 000000000..bbf93a465
 +};
 +} // end anonymous namespace
 +
-+bool PrototypeABIInfo::shouldUseInReg(QualType Ty, CCState &State) const {
++bool SkeletonABIInfo::shouldUseInReg(QualType Ty, CCState &State) const {
 +  unsigned Size = getContext().getTypeSize(Ty);
 +  unsigned SizeInRegs = llvm::alignTo(Size, 32U) / 32U;
 +
@@ -323,7 +323,7 @@ index 000000000..bbf93a465
 +  return true;
 +}
 +
-+ABIArgInfo PrototypeABIInfo::getIndirectResult(QualType Ty, bool ByVal,
++ABIArgInfo SkeletonABIInfo::getIndirectResult(QualType Ty, bool ByVal,
 +                                           CCState &State) const {
 +  if (!ByVal) {
 +    if (State.FreeRegs) {
@@ -341,7 +341,7 @@ index 000000000..bbf93a465
 +                                     MinABIStackAlignInBytes);
 +}
 +
-+ABIArgInfo PrototypeABIInfo::classifyArgumentType(QualType Ty,
++ABIArgInfo SkeletonABIInfo::classifyArgumentType(QualType Ty,
 +                                              CCState &State) const {
 +  // Check with the C++ ABI first.
 +  const RecordType *RT = Ty->getAs<RecordType>();
@@ -399,16 +399,16 @@ index 000000000..bbf93a465
 +}
 +
 +namespace {
-+class PrototypeTargetCodeGenInfo : public TargetCodeGenInfo {
++class SkeletonTargetCodeGenInfo : public TargetCodeGenInfo {
 +public:
-+  PrototypeTargetCodeGenInfo(CodeGen::CodeGenTypes &CGT)
-+      : TargetCodeGenInfo(std::make_unique<PrototypeABIInfo>(CGT)) {}
++  SkeletonTargetCodeGenInfo(CodeGen::CodeGenTypes &CGT)
++      : TargetCodeGenInfo(std::make_unique<SkeletonABIInfo>(CGT)) {}
 +};
 +}
 +
 +std::unique_ptr<TargetCodeGenInfo>
-+CodeGen::createPrototypeTargetCodeGenInfo(CodeGenModule &CGM) {
-+  return std::make_unique<PrototypeTargetCodeGenInfo>(CGM.getTypes());
++CodeGen::createSkeletonTargetCodeGenInfo(CodeGenModule &CGM) {
++  return std::make_unique<SkeletonTargetCodeGenInfo>(CGM.getTypes());
 +}
 diff --git a/clang/lib/Driver/Driver.cpp b/clang/lib/Driver/Driver.cpp
 index bdbdad936..d22bd4393 100644
@@ -418,7 +418,7 @@ index bdbdad936..d22bd4393 100644
  #include "ToolChains/Hexagon.h"
  #include "ToolChains/Hurd.h"
  #include "ToolChains/Lanai.h"
-+#include "ToolChains/Prototype.h"
++#include "ToolChains/Skeleton.h"
  #include "ToolChains/Linux.h"
  #include "ToolChains/MSP430.h"
  #include "ToolChains/MSVC.h"
@@ -426,8 +426,8 @@ index bdbdad936..d22bd4393 100644
        case llvm::Triple::lanai:
          TC = std::make_unique<toolchains::LanaiToolChain>(*this, Target, Args);
          break;
-+      case llvm::Triple::prototype:
-+        TC = std::make_unique<toolchains::PrototypeToolChain>(*this, Target, Args);
++      case llvm::Triple::skeleton:
++        TC = std::make_unique<toolchains::SkeletonToolChain>(*this, Target, Args);
 +        break;
        case llvm::Triple::xcore:
          TC = std::make_unique<toolchains::XCoreToolChain>(*this, Target, Args);
@@ -441,8 +441,8 @@ index 47ec36b3a..9dc02af04 100644
      AddLanaiTargetArgs(Args, CmdArgs);
      break;
 +
-+  case llvm::Triple::prototype:
-+    AddPrototypeTargetArgs(Args, CmdArgs);
++  case llvm::Triple::skeleton:
++    AddSkeletonTargetArgs(Args, CmdArgs);
 +    break;
  
    case llvm::Triple::hexagon:
@@ -451,7 +451,7 @@ index 47ec36b3a..9dc02af04 100644
    }
  }
  
-+void Clang::AddPrototypeTargetArgs(const ArgList &Args,
++void Clang::AddSkeletonTargetArgs(const ArgList &Args,
 +                               ArgStringList &CmdArgs) const {
 +  if (Arg *A = Args.getLastArg(options::OPT_mcpu_EQ)) {
 +    StringRef CPUName = A->getValue();
@@ -485,7 +485,7 @@ index 64fc86b6b..0e7d0020b 100644
                              llvm::opt::ArgStringList &CmdArgs) const;
    void AddLanaiTargetArgs(const llvm::opt::ArgList &Args,
                            llvm::opt::ArgStringList &CmdArgs) const;
-+  void AddPrototypeTargetArgs(const llvm::opt::ArgList &Args,
++  void AddSkeletonTargetArgs(const llvm::opt::ArgList &Args,
 +                          llvm::opt::ArgStringList &CmdArgs) const;
    void AddWebAssemblyTargetArgs(const llvm::opt::ArgList &Args,
                                  llvm::opt::ArgStringList &CmdArgs) const;
@@ -498,7 +498,7 @@ index 0d6907b8e..c85c4f425 100644
    return "";
  }
  
-+static std::string getPrototypeTargetCPU(const ArgList &Args) {
++static std::string getSkeletonTargetCPU(const ArgList &Args) {
 +  if (Arg *A = Args.getLastArg(options::OPT_mcpu_EQ)) {
 +    return A->getValue();
 +  }
@@ -513,18 +513,18 @@ index 0d6907b8e..c85c4f425 100644
    case llvm::Triple::lanai:
      return getLanaiTargetCPU(Args);
 +
-+  case llvm::Triple::prototype:
-+    return getPrototypeTargetCPU(Args);
++  case llvm::Triple::skeleton:
++    return getSkeletonTargetCPU(Args);
  
    case llvm::Triple::systemz:
      return systemz::getSystemZTargetCPU(Args);
-diff --git a/clang/lib/Driver/ToolChains/Prototype.h b/clang/lib/Driver/ToolChains/Prototype.h
+diff --git a/clang/lib/Driver/ToolChains/Skeleton.h b/clang/lib/Driver/ToolChains/Skeleton.h
 new file mode 100644
 index 000000000..9b33f19ff
 --- /dev/null
-+++ b/clang/lib/Driver/ToolChains/Prototype.h
++++ b/clang/lib/Driver/ToolChains/Skeleton.h
 @@ -0,0 +1,38 @@
-+//===--- Prototype.h - Prototype ToolChain Implementations --------------*- C++ -*-===//
++//===--- Skeleton.h - Skeleton ToolChain Implementations --------------*- C++ -*-===//
 +//
 +// Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
 +// See https://llvm.org/LICENSE.txt for license information.
@@ -532,8 +532,8 @@ index 000000000..9b33f19ff
 +//
 +//===----------------------------------------------------------------------===//
 +
-+#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_PROTOTYPE_H
-+#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_PROTOTYPE_H
++#ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SKELETON_H
++#define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SKELETON_H
 +
 +#include "Gnu.h"
 +#include "clang/Driver/ToolChain.h"
@@ -542,9 +542,9 @@ index 000000000..9b33f19ff
 +namespace driver {
 +namespace toolchains {
 +
-+class LLVM_LIBRARY_VISIBILITY PrototypeToolChain : public Generic_ELF {
++class LLVM_LIBRARY_VISIBILITY SkeletonToolChain : public Generic_ELF {
 +public:
-+  PrototypeToolChain(const Driver &D, const llvm::Triple &Triple,
++  SkeletonToolChain(const Driver &D, const llvm::Triple &Triple,
 +                 const llvm::opt::ArgList &Args)
 +      : Generic_ELF(D, Triple, Args) {}
 +
@@ -561,4 +561,4 @@ index 000000000..9b33f19ff
 +} // end namespace driver
 +} // end namespace clang
 +
-+#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_PROTOTYPE_H
++#endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_SKELETON_H

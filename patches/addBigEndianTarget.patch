@@ -6,7 +6,7 @@ index 09153a2f6..e7450eaf0 100644
    case Triple::hsail64:
    case Triple::hsail:
    case Triple::kalimba:
-+  case Triple::prototype:
++  case Triple::skeleton:
    case Triple::le32:
    case Triple::le64:
    case Triple::loongarch32:

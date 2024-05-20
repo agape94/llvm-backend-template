@@ -1,11 +1,11 @@
 From ec9c2baec9fd4874bac28823dded86ed87178fe3 Mon Sep 17 00:00:00 2001
 From: Alexandru Agape <alexandru.agape@student.tugraz.at>
 Date: Fri, 19 Jan 2024 11:59:07 +0100
-Subject: [PATCH] Add Prototype 32-bit target to the LLVM build system
+Subject: [PATCH] Add Skeleton 32-bit target to the LLVM build system
 
 ---
  llvm/include/llvm/BinaryFormat/ELF.h                |  6 ++++++
- llvm/include/llvm/BinaryFormat/ELFRelocs/Prototype.def |  6 ++++++
+ llvm/include/llvm/BinaryFormat/ELFRelocs/Skeleton.def |  6 ++++++
  llvm/include/llvm/Object/ELFObjectFile.h            |  4 ++++
  llvm/include/llvm/TargetParser/Triple.h             |  6 ++++++
  llvm/lib/BinaryFormat/ELF.cpp                       |  3 +++
@@ -14,7 +14,7 @@ Subject: [PATCH] Add Prototype 32-bit target to the LLVM build system
  llvm/lib/ObjectYAML/ELFYAML.cpp                     |  4 ++++
  llvm/lib/TargetParser/Triple.cpp                    |  9 +++++++++
  9 files changed, 60 insertions(+)
- create mode 100644 llvm/include/llvm/BinaryFormat/ELFRelocs/Prototype.def
+ create mode 100644 llvm/include/llvm/BinaryFormat/ELFRelocs/Skeleton.def
 
 diff --git a/llvm/include/llvm/BinaryFormat/ELF.h b/llvm/include/llvm/BinaryFormat/ELF.h
 index f5a7cdb38..de7878be6 100644
@@ -32,7 +32,7 @@ index f5a7cdb38..de7878be6 100644
    EM_VE = 251,            // NEC SX-Aurora VE
    EM_CSKY = 252,          // C-SKY 32-bit processor
    EM_LOONGARCH = 258,     // LoongArch
-+  EM_PROTOTYPE = 300,        // Prototype 32-bit
++  EM_SKELETON = 300,        // Skeleton 32-bit
  };
  
  // Object file classes.
@@ -40,26 +40,26 @@ index f5a7cdb38..de7878be6 100644
  #include "ELFRelocs/Lanai.def"
  };
  
-+// ELF Relocation type for Prototype.
++// ELF Relocation type for Skeleton.
 +enum {
-+#include "ELFRelocs/Prototype.def"
++#include "ELFRelocs/Skeleton.def"
 +};
 +
  // RISCV Specific e_flags
  enum : unsigned {
    EF_RISCV_RVC = 0x0001,
-diff --git a/llvm/include/llvm/BinaryFormat/ELFRelocs/Prototype.def b/llvm/include/llvm/BinaryFormat/ELFRelocs/Prototype.def
+diff --git a/llvm/include/llvm/BinaryFormat/ELFRelocs/Skeleton.def b/llvm/include/llvm/BinaryFormat/ELFRelocs/Skeleton.def
 new file mode 100644
 index 000000000..1b5066f1c
 --- /dev/null
-+++ b/llvm/include/llvm/BinaryFormat/ELFRelocs/Prototype.def
++++ b/llvm/include/llvm/BinaryFormat/ELFRelocs/Skeleton.def
 @@ -0,0 +1,6 @@
 +#ifndef ELF_RELOC
 +#error "ELF_RELOC must be defined"
 +#endif
 +
 +// No relocation
-+ELF_RELOC(R_PROTOTYPE_NONE,        0)
++ELF_RELOC(R_SKELETON_NONE,        0)
 \ No newline at end of file
 diff --git a/llvm/include/llvm/Object/ELFObjectFile.h b/llvm/include/llvm/Object/ELFObjectFile.h
 index f3016cc14..07570c528 100644
@@ -69,8 +69,8 @@ index f3016cc14..07570c528 100644
        return "elf32-hexagon";
      case ELF::EM_LANAI:
        return "elf32-lanai";
-+    case ELF::EM_PROTOTYPE:
-+      return "elf32-prototype";
++    case ELF::EM_SKELETON:
++      return "elf32-skeleton";
      case ELF::EM_MIPS:
        return "elf32-mips";
      case ELF::EM_MSP430:
@@ -78,8 +78,8 @@ index f3016cc14..07570c528 100644
      return Triple::hexagon;
    case ELF::EM_LANAI:
      return Triple::lanai;
-+  case ELF::EM_PROTOTYPE:
-+    return Triple::prototype;
++  case ELF::EM_SKELETON:
++    return Triple::skeleton;
    case ELF::EM_MIPS:
      switch (EF.getHeader().e_ident[ELF::EI_CLASS]) {
      case ELF::ELFCLASS32:
@@ -91,7 +91,7 @@ index 79ccd644a..cdd4107ee 100644
      kalimba,        // Kalimba: generic kalimba
      shave,          // SHAVE: Movidius vector VLIW processors
      lanai,          // Lanai: Lanai 32-bit
-+    prototype,         // Prototype: Prototype 32-bit
++    skeleton,         // Skeleton: Skeleton 32-bit
      wasm32,         // WebAssembly with 32-bit pointers
      wasm64,         // WebAssembly with 64-bit pointers
      renderscript32, // 32-bit RenderScript
@@ -99,9 +99,9 @@ index 79ccd644a..cdd4107ee 100644
      return getArch() == Triple::x86 || getArch() == Triple::x86_64;
    }
  
-+  /// Tests whether the target is Prototype
-+  bool isPrototype() const {
-+    return getArch() == Triple::prototype;
++  /// Tests whether the target is Skeleton
++  bool isSkeleton() const {
++    return getArch() == Triple::skeleton;
 +  }
 +
    /// Tests whether the target is VE
@@ -123,7 +123,7 @@ index dc8f3051a..8ac79fb1c 100644
        .Case("amdgpu", EM_AMDGPU)
        .Case("riscv", EM_RISCV)
        .Case("lanai", EM_LANAI)
-+      .Case("prototype", EM_PROTOTYPE)
++      .Case("skeleton", EM_SKELETON)
        .Case("bpf", EM_BPF)
        .Case("ve", EM_VE)
        .Case("csky", EM_CSKY)
@@ -140,8 +140,8 @@ index dc8f3051a..8ac79fb1c 100644
      return "riscv";
    case EM_LANAI:
      return "lanai";
-+  case EM_PROTOTYPE:
-+    return "prototype";
++  case EM_SKELETON:
++    return "skeleton";
    case EM_BPF:
      return "bpf";
    case EM_VE:
@@ -153,9 +153,9 @@ index 0d1862e57..85daee7f2 100644
        break;
      }
      break;
-+  case ELF::EM_PROTOTYPE:
++  case ELF::EM_SKELETON:
 +    switch (Type) {
-+#include "llvm/BinaryFormat/ELFRelocs/Prototype.def"
++#include "llvm/BinaryFormat/ELFRelocs/Skeleton.def"
 +    default:
 +      break;
 +    }
@@ -167,7 +167,7 @@ index 0d1862e57..85daee7f2 100644
      return ELF::R_HEX_RELATIVE;
    case ELF::EM_LANAI:
      break;
-+  case ELF::EM_PROTOTYPE:
++  case ELF::EM_SKELETON:
 +    break;
    case ELF::EM_PPC:
      break;
@@ -180,13 +180,13 @@ index 03ac59289..c0cb93497 100644
    llvm_unreachable("Invalid relocation type");
  }
  
-+static bool supportsPrototype(uint64_t Type) {
-+  return Type == ELF::R_PROTOTYPE_NONE;
++static bool supportsSkeleton(uint64_t Type) {
++  return Type == ELF::R_SKELETON_NONE;
 +}
 +
-+static uint64_t resolvePrototype(uint64_t Type, uint64_t Offset, uint64_t S,
++static uint64_t resolveSkeleton(uint64_t Type, uint64_t Offset, uint64_t S,
 +                             uint64_t /*LocData*/, int64_t Addend) {
-+  if (Type == ELF::R_PROTOTYPE_NONE)
++  if (Type == ELF::R_SKELETON_NONE)
 +    return S + Addend;
 +  llvm_unreachable("Invalid relocation type");
 +}
@@ -198,8 +198,8 @@ index 03ac59289..c0cb93497 100644
        return {supportsAVR, resolveAVR};
      case Triple::lanai:
        return {supportsLanai, resolveLanai};
-+    case Triple::prototype:
-+      return {supportsPrototype, resolvePrototype};
++    case Triple::skeleton:
++      return {supportsSkeleton, resolveSkeleton};
      case Triple::loongarch32:
        return {supportsLoongArch, resolveLoongArch};
      case Triple::mipsel:
@@ -219,7 +219,7 @@ index e92c61d81..44283899d 100644
    ECase(EM_AMDGPU);
    ECase(EM_RISCV);
    ECase(EM_LANAI);
-+  ECase(EM_PROTOTYPE);
++  ECase(EM_SKELETON);
    ECase(EM_BPF);
    ECase(EM_VE);
    ECase(EM_CSKY);
@@ -227,8 +227,8 @@ index e92c61d81..44283899d 100644
    case ELF::EM_LANAI:
  #include "llvm/BinaryFormat/ELFRelocs/Lanai.def"
      break;
-+  case ELF::EM_PROTOTYPE:
-+#include "llvm/BinaryFormat/ELFRelocs/Prototype.def"
++  case ELF::EM_SKELETON:
++#include "llvm/BinaryFormat/ELFRelocs/Skeleton.def"
 +    break;
    case ELF::EM_AMDGPU:
  #include "llvm/BinaryFormat/ELFRelocs/AMDGPU.def"
@@ -241,7 +241,7 @@ index a3d6a06af..42714dc16 100644
    case hsail:          return "hsail";
    case kalimba:        return "kalimba";
    case lanai:          return "lanai";
-+  case prototype:         return "prototype";
++  case skeleton:         return "skeleton";
    case le32:           return "le32";
    case le64:           return "le64";
    case loongarch32:    return "loongarch32";
@@ -249,7 +249,7 @@ index a3d6a06af..42714dc16 100644
  
    case kalimba:     return "kalimba";
    case lanai:       return "lanai";
-+  case prototype:      return "prototype";
++  case skeleton:      return "skeleton";
    case shave:       return "shave";
    case wasm32:
    case wasm64:      return "wasm";
@@ -257,7 +257,7 @@ index a3d6a06af..42714dc16 100644
      .Case("spirv64", spirv64)
      .Case("kalimba", kalimba)
      .Case("lanai", lanai)
-+    .Case("prototype", prototype)
++    .Case("skeleton", skeleton)
      .Case("shave", shave)
      .Case("wasm32", wasm32)
      .Case("wasm64", wasm64)
@@ -265,7 +265,7 @@ index a3d6a06af..42714dc16 100644
             "spirv64v1.3", "spirv64v1.4", "spirv64v1.5", Triple::spirv64)
      .StartsWith("kalimba", Triple::kalimba)
      .Case("lanai", Triple::lanai)
-+    .Case("prototype", Triple::prototype)
++    .Case("skeleton", Triple::skeleton)
      .Case("renderscript32", Triple::renderscript32)
      .Case("renderscript64", Triple::renderscript64)
      .Case("shave", Triple::shave)
@@ -273,7 +273,7 @@ index a3d6a06af..42714dc16 100644
    case Triple::hsail:
    case Triple::kalimba:
    case Triple::lanai:
-+  case Triple::prototype:
++  case Triple::skeleton:
    case Triple::le32:
    case Triple::le64:
    case Triple::loongarch32:
@@ -281,7 +281,7 @@ index a3d6a06af..42714dc16 100644
    case llvm::Triple::hsail:
    case llvm::Triple::kalimba:
    case llvm::Triple::lanai:
-+  case llvm::Triple::prototype:
++  case llvm::Triple::skeleton:
    case llvm::Triple::le32:
    case llvm::Triple::loongarch32:
    case llvm::Triple::m68k:
@@ -289,7 +289,7 @@ index a3d6a06af..42714dc16 100644
    case Triple::hsail:
    case Triple::kalimba:
    case Triple::lanai:
-+  case Triple::prototype:
++  case Triple::skeleton:
    case Triple::le32:
    case Triple::loongarch32:
    case Triple::m68k:
@@ -297,7 +297,7 @@ index a3d6a06af..42714dc16 100644
    case Triple::lanai:
    case Triple::m68k:
    case Triple::msp430:
-+  case Triple::prototype:
++  case Triple::skeleton:
    case Triple::r600:
    case Triple::shave:
    case Triple::sparcel:

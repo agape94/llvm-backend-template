@@ -6,7 +6,7 @@ index 09153a2f6..e7450eaf0 100644
    case Triple::mips64el:
    case Triple::mipsel:
    case Triple::msp430:
-+  case Triple::prototype:
++  case Triple::skeleton:
    case Triple::nvptx64:
    case Triple::nvptx:
    case Triple::ppcle:
