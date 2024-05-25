@@ -17,7 +17,7 @@ def search_replace_in_file(file_path, search_string_lower, replace_string_lower,
         src_file.writelines(lines)
 
 # Function to recursively search and replace in a directory
-def search_replace_in_directory(directory_path, replace_string, search_string = "Prototype"): 
+def search_replace_in_directory(directory_path, replace_string, search_string = "Skeleton"): 
     search_string_lower = search_string.lower()
     replace_string_lower = replace_string.lower()
 

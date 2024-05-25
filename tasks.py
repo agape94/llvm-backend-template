@@ -66,6 +66,10 @@ def copy_directory_recursively(src, dst):
 def copy_file(src, dst):
   shutil.copyfile(src, dst)
 
+def write_file(path, content):
+  with open(path, "a") as f:
+    f.write(content)
+
 # ==================================================================================================================
 # GIT HELPER FUNCTIONS
 
@@ -83,6 +87,10 @@ def git_commit(message):
 
 def git_apply_patch(patch):
   subprocess.run(["git", "apply", f"{patch}"])
+
+def git_ignore_pattern(environment_path, pattern):
+  with open(os.path.join(environment_path, ".gitignore"), "a") as f:
+    f.write(f"{pattern}\n")
 
 # ==================================================================================================================
 
@@ -122,6 +130,8 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   """
     Setup a new LLVM backend development environment for the given target name.
   """
+  template_target_name = "Skeleton"
+
   check_arguments(target_name, path, arch, endianess, llvm_version)
   
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
@@ -136,6 +146,9 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
   
+  write_file(os.path.join(environment_path, ".experimental_targets_to_build"), target_name)
+  git_ignore_pattern(environment_path, ".experimental_targets")
+  
   info(f"Initializing repository ... ")
   os.chdir(environment_path)
   git_init()
@@ -145,38 +158,38 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   git_commit(f"Add LLVM-{llvm_version} release")
   
   # copy the template folder to the given location
-  template_path = os.path.join(project_root, "Skeleton")
+  template_path = os.path.join(project_root, template_target_name)
   target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
   info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   copy_directory_recursively(src=template_path, dst=target_folder_path)
   
-  # replace all occurences of "Skeleton" with the given target name
-  info(f"Search and replace `Skeleton` target name with {target_name} in the backend folder ... ")
-  if target_name != "Skeleton":
-    search_replace_in_directory(target_folder_path, target_name)
+  # replace all occurences of `template_target_name` with the given target name
+  info(f"Search and replace `{template_target_name}` target name with {target_name} in the backend folder ... ")
+  if target_name != template_target_name:
+    search_replace_in_directory(target_folder_path, target_name, search_string=template_target_name)
   
   git_add(target_folder_path)
   git_commit(f"Add template folder for target {target_name}")
   
   info(f"Add new target to LLVM build system")
   
-  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}BitSkeletonTarget.patch")
+  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}Bit{template_target_name}Target.patch")
   new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLVM.patch")
   copy_file(template_patch_file_path, new_patch_file_path)
   
-  search_replace_in_file(new_patch_file_path, "skeleton", target_name.lower(), 
-                                "Skeleton", target_name,
-                                "SKELETON", target_name.upper())
+  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
+                                template_target_name, target_name,
+                                template_target_name.upper(), target_name.upper())
   git_apply_patch(new_patch_file_path)
 
   template_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{endianess.capitalize()}EndianTarget.patch")
   new_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}{endianess.capitalize()}Endian.patch")
   copy_file(template_endianess_patch_file_path, new_endianess_patch_file_path)
 
-  search_replace_in_file(new_endianess_patch_file_path, "skeleton", target_name.lower(), 
-                                "Skeleton", target_name,
-                                "SKELETON", target_name.upper())
-  
+  search_replace_in_file(new_endianess_patch_file_path, template_target_name.lower(), target_name.lower(), 
+                                template_target_name, target_name,
+                                template_target_name.upper(), target_name.upper())
+
   git_apply_patch(new_endianess_patch_file_path)
   
   git_add(environment_path)
@@ -190,9 +203,9 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToClang.patch")
   copy_file(template_patch_file_path, new_patch_file_path)
 
-  search_replace_in_file(new_patch_file_path, "skeleton", target_name.lower(), 
-                                "Skeleton", target_name,
-                                "SKELETON", target_name.upper())
+  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
+                                template_target_name, target_name,
+                                template_target_name.upper(), target_name.upper())
 
   git_apply_patch(new_patch_file_path)
   git_add(environment_path)
