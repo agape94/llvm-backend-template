@@ -213,6 +213,21 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
 
   os.remove(new_patch_file_path)
 
+  info(f"Add new target to LLD build system")
+  template_patch_file_path = os.path.join(project_root, "patches", f"addTargetToLLD.patch")
+  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLD.patch")
+  copy_file(template_patch_file_path, new_patch_file_path)
+
+  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
+                                template_target_name, target_name,
+                                template_target_name.upper(), target_name.upper())
+
+  git_apply_patch(new_patch_file_path)
+  git_add(environment_path)
+  git_commit(f"Add target {target_name} to LLD build system")
+
+  os.remove(new_patch_file_path)
+
   copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
   git_add(os.path.join(environment_path, "tasks.py"))
   git_commit("Add compile invoke task to the new environment")
