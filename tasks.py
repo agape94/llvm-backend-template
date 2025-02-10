@@ -93,6 +93,7 @@ def git_apply_configs():
   subprocess.run(["git", "config", "core.preloadIndex", "true"])
   subprocess.run(["git", "config", "core.untrackedcache", "true"])
   subprocess.run(["git", "config", "core.fsmonitor", "true"])
+  subprocess.run(["git", "config", "core.autocrlf", "true"])
 
 def git_ignore_pattern(environment_path, pattern):
   with open(os.path.join(environment_path, ".gitignore"), "a") as f:
