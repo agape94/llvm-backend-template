@@ -46,6 +46,9 @@ def build_target(c, experimental_targets="", path=".", upstream_targets="", buil
     release = False
   else:
     release = True
+
+  build_type = "Debug" if debug else "Release"
+  build_dir_name = f'build_{build_type.lower()}'
   build_dir = os.path.join(path, build_dir_name)
 
   if not os.path.exists(f'{build_dir}'):
