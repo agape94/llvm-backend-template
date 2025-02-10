@@ -15,16 +15,16 @@ def error (msg):
 # ==================================================================================================================
 
 @task(aliases = ['b'], 
-      help={"experimental_targets": "List of experimental targets to build, Strings separated by ';' (semicolon). Example: 'TriCore;RISCW;etc'. If not defined, the name of the target the environment was created for will be used.",
-             "path": "Path to llvm source root. By default the current directory is considered",
-             "build_type": "Possible values: Debug, Release. Default value: Release",
-             "llc_only": "Whether to only build llc or not. Default value: False",
-             "upstream_targets": "List of upstream targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc",
-             "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash."})
-def build_target(c, experimental_targets="", path=".", upstream_targets="", build_type="Release", llc_only=False, parallel_link_jobs=2):
+      help={"upstream_targets": "List of upstream targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc. If not defined, the targets are read from the upstream_targets_to_build.ini file",
+            "experimental_targets": "List of experimental targets to build, Strings separated by ';' (semicolon). Example: 'TriCore;RISCW;etc'. If not defined, the targets are read from the experimental_targets_to_build.ini file",
+            "path": "Path to llvm source root. By default the current directory is considered",
+            "debug": "Build Debug version of the target. Default value: False",
+            "release": "Build Release version of the target. Default value: True",
+            "llc_only": "Whether to only build llc or not. Default value: False",
+            "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash."})
+def build_target(c, upstream_targets="", experimental_targets="", path=".", debug=False, release=True, llc_only=False, parallel_link_jobs=2):
   """
-    Starts the build process for the target specified in the target_name parameter. If the target_name is not provided, the name of the target the environment was created for will be used.
-    By default, the build type is set to Release. If you want to build the target in Debug mode, you can specify the build type as Debug.
+    Starts the build process for the compiler. By default, the build type is set to Release.
   """
   # Check if there are any targets to build defined in the .*_targets_to_build files if the respective parameters are not provided
   # This is useful because the user may want to build multiple targets and it is easier to define them in a file than to provide them as a parameter
