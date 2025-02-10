@@ -130,7 +130,7 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianess": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
             "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
-def setup_new_environment(c, target_name, path, arch=32, endianess="little", parallel_link_jobs=2, llvm_version=LLVM_DEFAULT_VERSION):
+def setup_new_environment(c, target_name, path, arch=32, endianess="little", llvm_version=LLVM_DEFAULT_VERSION):
   """
     Setup a new LLVM backend development environment for the given target name.
   """
