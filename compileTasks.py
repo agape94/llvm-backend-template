@@ -75,7 +75,7 @@ def build_target(c, experimental_targets="", path=".", upstream_targets="", buil
   os.chdir(build_dir)
 
   cores = multiprocessing.cpu_count()
-  build_command = f'ninja -j {cores - 2 if cores > 4 else cores - 1}'
+  build_command = f'ninja -j {cores - 1}'
     
   info(f"Build command: {build_command}")
   info(f"Building target {experimental_targets} ...")
