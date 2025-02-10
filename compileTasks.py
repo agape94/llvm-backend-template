@@ -47,13 +47,6 @@ def build_target(c, experimental_targets="", path=".", upstream_targets="", buil
   else:
     release = True
   build_dir = os.path.join(path, build_dir_name)
-  
-  if os.getenv('CI') is not None:
-    # I decided to implement my own caching solution because the official one is way too slow when the build folder is very large (like it is for LLVM)
-    print("We are in CI mode. Try to copy the cache build folder if it exists...")
-    ci_build_path = os.getenv('CI_BUILDS_DIR')
-    if os.path.exists(os.path.join(ci_build_path, build_dir_name)):
-      shutil.move(os.path.join(ci_build_path, build_dir_name), os.path.join(ci_build_path, f"llvm-{experimental_targets.lower()}-backend/{build_dir_name}"))
 
   if not os.path.exists(f'{build_dir}'):
     os.mkdir(f'{build_dir}')
@@ -92,12 +85,5 @@ def build_target(c, experimental_targets="", path=".", upstream_targets="", buil
     info("Built succesfully!")
   else:
     raise Exception("The build has failed.")
-  
-  if os.getenv('CI') is not None:
-    # Copy the build folder back
-    print("CI: Copy the build folder into the cache location")
-    ci_build_path = os.getenv('CI_BUILDS_DIR')
-    if os.path.exists(os.path.join(ci_build_path, build_dir_name)):
-      shutil.move(os.path.join(ci_build_path, f"llvm-{experimental_targets.lower()}-backend/{build_dir_name}"), os.path.join(ci_build_path, build_dir_name))
 
   os.chdir(path)
