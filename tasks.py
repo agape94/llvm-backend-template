@@ -88,6 +88,12 @@ def git_commit(message):
 def git_apply_patch(patch):
   subprocess.run(["git", "apply", f"{patch}"])
 
+def git_apply_configs():
+  subprocess.run(["git", "config", "feature.manyFiles", "true"])
+  subprocess.run(["git", "config", "core.preloadIndex", "true"])
+  subprocess.run(["git", "config", "core.untrackedcache", "true"])
+  subprocess.run(["git", "config", "core.fsmonitor", "true"])
+
 def git_ignore_pattern(environment_path, pattern):
   with open(os.path.join(environment_path, ".gitignore"), "a") as f:
     f.write(f"{pattern}\n")
@@ -147,9 +153,14 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", par
   write_file(os.path.join(environment_path, ".experimental_targets_to_build"), target_name)
   git_ignore_pattern(environment_path, ".experimental_targets")
   
-  info(f"Initializing repository ... ")
+  info(f"Initializing repository.")
   os.chdir(environment_path)
   git_init()
+
+  info(f"Applying recommended git configurations to speed up the initialization of the repository.")
+  git_apply_configs()
+
+  info(f"Adding LLVM-{llvm_version} release to the repository. This may take a while depending on your system's performance ...")
   git_add_all()
 
   info(f"Adding initial commit ")
