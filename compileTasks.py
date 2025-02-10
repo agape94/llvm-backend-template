@@ -14,18 +14,6 @@ def error (msg):
 
 # ==================================================================================================================
 
-def check_arguments(target_name, path, build_type):
-  if target_name is None or not target_name[0].isupper():
-    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
-  
-  if not os.path.exists(path) or len(os.listdir(path)) == 0:
-    raise ValueError(f"{path} is empty or doesn't exist")
-  
-  if not build_type in {"Debug", "Release"}:
-    raise ValueError(f"Please provide a valid build type (Debug or Release)")
-
-# ==================================================================================================================
-
 @task(aliases = ['b'], 
       help={"experimental_targets": "List of experimental targets to build, Strings separated by ';' (semicolon). Example: 'TriCore;RISCW;etc'. If not defined, the name of the target the environment was created for will be used.",
              "path": "Path to llvm source root. By default the current directory is considered",
@@ -38,13 +26,26 @@ def build_target(c, experimental_targets="", path=".", upstream_targets="", buil
     Starts the build process for the target specified in the target_name parameter. If the target_name is not provided, the name of the target the environment was created for will be used.
     By default, the build type is set to Release. If you want to build the target in Debug mode, you can specify the build type as Debug.
   """
+  # Check if there are any targets to build defined in the .*_targets_to_build files if the respective parameters are not provided
+  # This is useful because the user may want to build multiple targets and it is easier to define them in a file than to provide them as a parameter
   if experimental_targets == "":
-    with open(os.path.join(os.getcwd(), ".experimental_targets_to_build"), "r") as f:
-      experimental_targets = f.read().strip()
+    with open(os.path.join(os.getcwd(), "experimental_targets_to_build.ini"), "r") as f:
+      experimental_targets = ";".join([line.strip() for line in f if not line.strip().startswith("#")])
   
-  check_arguments(experimental_targets, path, build_type)
+  if upstream_targets == "":
+    with open(os.path.join(os.getcwd(), "upstream_targets_to_build.ini"), "r") as f:
+      upstream_targets = ";".join([line.strip() for line in f if not line.strip().startswith("#")])
 
-  build_dir_name = f'build_{experimental_targets.lower()}_{build_type.lower()}'
+  if experimental_targets == "" and upstream_targets == "":
+    raise ValueError("Please provide at least one target to build.")
+  
+  if debug == release:
+    raise ValueError("Please provide only one of the build types: Debug or Release")
+  
+  if debug:
+    release = False
+  else:
+    release = True
   build_dir = os.path.join(path, build_dir_name)
   
   if os.getenv('CI') is not None:
