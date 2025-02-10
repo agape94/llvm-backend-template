@@ -123,10 +123,8 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
             "path": "Location on disk where the new environment will be placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianess": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
-            "build": "Whether or not to start compiling the target after setting up the environment. Default value: True ",
-            "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash.",
             "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
-def setup_new_environment(c, target_name, path, arch=32, endianess="little", build=True, parallel_link_jobs=2, llvm_version=LLVM_DEFAULT_VERSION):
+def setup_new_environment(c, target_name, path, arch=32, endianess="little", parallel_link_jobs=2, llvm_version=LLVM_DEFAULT_VERSION):
   """
     Setup a new LLVM backend development environment for the given target name.
   """
@@ -235,6 +233,3 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", bui
   os.chdir(project_root)
   
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
-
-  if build:
-    build_target(c, target_name, path=environment_path, parallel_link_jobs=parallel_link_jobs)
