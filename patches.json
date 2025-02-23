@@ -1,0 +1,54 @@
+{
+  "files": [
+    {
+      "path": "llvm/include/llvm/BinaryFormat/ELF.h",
+      "additions": [
+        {
+          "type": "enum_value",
+          "content": "EM_TARGET",
+          "comment": "Target bit_width-bit processor",
+          "pattern": "EM_",
+          "location": "after_last_match",
+          "function_name": "",
+          "options":
+          {
+            "bit_witdh": false,
+            "endianness": false,
+            "with_value": true
+          }
+        },
+        {
+          "type": "general",
+          "content": "// ELF Relocation type for Target.\nenum {\n#include \"ELFRelocs/Target.def\"\n};",
+          "comment": "",
+          "pattern": "// ELF Relocation types for",
+          "location": "before_first_match",
+          "function_name": "",
+          "options":
+          {
+            "bit_witdh": false,
+            "endianness": false,
+            "with_value": false
+          }
+        }
+      ]
+    },
+    {
+      "path": "llvm/include/llvm/BinaryFormat/ELFRelocs/Target.def",
+      "additions": [
+        {
+          "type": "new_file",
+          "content": "#ifndef ELF_RELOC\n#error \"ELF_RELOC must be defined\"\n#endif\n\n// No relocation\nELF_RELOC(R_TARGET_NONE,        0)",
+          "pattern": "",
+          "location": "",
+          "function_name": "",
+          "options":
+          {
+            "bit_witdh": false,
+            "endianness": false
+          }
+        }
+      ]
+    }
+  ]
+}

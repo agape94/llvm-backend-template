@@ -7,6 +7,8 @@ import shutil
 import re
 from replaceString import *
 from compileTasks import *
+from applyPatches import *
+
 LLVM_DEFAULT_VERSION = "17.0.6"
 # ==================================================================================================================
 
@@ -71,35 +73,6 @@ def write_file(path, content):
     f.write(content)
 
 # ==================================================================================================================
-# GIT HELPER FUNCTIONS
-
-def git_init():
-  subprocess.run(["git", "init"])
-
-def git_add(path):
-  subprocess.run(["git", "add", f"{path}"])
-
-def git_add_all():
-  subprocess.run(["git", "add", "-A"])
-
-def git_commit(message):
-  subprocess.run(["git", "commit", "-m", message, "-q"])
-
-def git_apply_patch(patch):
-  subprocess.run(["git", "apply", f"{patch}"])
-
-def git_apply_configs():
-  subprocess.run(["git", "config", "feature.manyFiles", "true"])
-  subprocess.run(["git", "config", "core.preloadIndex", "true"])
-  subprocess.run(["git", "config", "core.untrackedcache", "true"])
-  subprocess.run(["git", "config", "core.fsmonitor", "true"])
-  subprocess.run(["git", "config", "core.autocrlf", "true"])
-
-def git_ignore_pattern(environment_path, pattern):
-  with open(os.path.join(environment_path, ".gitignore"), "a") as f:
-    f.write(f"{pattern}\n")
-
-# ==================================================================================================================
 
 def check_arguments(target_name, path, arch, endianess, llvm_version):
   if not target_name[0].isupper():
@@ -142,7 +115,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
   
   repo_name = f"llvm-{target_name.lower()}-backend"
-  environment_path = os.path.join(path, repo_name)
+  environment_path = os.path.abspath(os.path.join(path, repo_name))
   project_root = os.getcwd()
 
   # download LLVM release
@@ -152,20 +125,6 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
     raise OSError(f"Something went wrong during archive extraction")
   
   write_file(os.path.join(environment_path, ".experimental_targets_to_build"), target_name)
-  git_ignore_pattern(environment_path, ".experimental_targets")
-  
-  info(f"Initializing repository.")
-  os.chdir(environment_path)
-  git_init()
-
-  info(f"Applying recommended git configurations to speed up the initialization of the repository.")
-  git_apply_configs()
-
-  info(f"Adding LLVM-{llvm_version} release to the repository. This may take a while depending on your system's performance ...")
-  git_add_all()
-
-  info(f"Adding initial commit ")
-  git_commit(f"Add LLVM-{llvm_version} release")
   
   # copy the template folder to the given location
   template_path = os.path.join(project_root, template_target_name)
@@ -178,70 +137,11 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   if target_name != template_target_name:
     search_replace_in_directory(target_folder_path, target_name, search_string=template_target_name)
   
-  git_add(target_folder_path)
-  git_commit(f"Add template folder for target {target_name}")
-  
   info(f"Add new target to LLVM build system")
-  
-  template_patch_file_path = os.path.join(project_root, "patches", f"add{arch}Bit{template_target_name}Target.patch")
-  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLVM.patch")
-  copy_file(template_patch_file_path, new_patch_file_path)
-  
-  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
-                                template_target_name, target_name,
-                                template_target_name.upper(), target_name.upper())
-  git_apply_patch(new_patch_file_path)
 
-  template_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{endianess.capitalize()}EndianTarget.patch")
-  new_endianess_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}{endianess.capitalize()}Endian.patch")
-  copy_file(template_endianess_patch_file_path, new_endianess_patch_file_path)
-
-  search_replace_in_file(new_endianess_patch_file_path, template_target_name.lower(), target_name.lower(), 
-                                template_target_name, target_name,
-                                template_target_name.upper(), target_name.upper())
-
-  git_apply_patch(new_endianess_patch_file_path)
-  
-  git_add(environment_path)
-  git_commit(f"Add target {target_name} to LLVM build system")
-
-  os.remove(new_patch_file_path)
-  os.remove(new_endianess_patch_file_path)
-
-  info(f"Add new target to Clang build system")
-  template_patch_file_path = os.path.join(project_root, "patches", f"addTargetToClang.patch")
-  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToClang.patch")
-  copy_file(template_patch_file_path, new_patch_file_path)
-
-  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
-                                template_target_name, target_name,
-                                template_target_name.upper(), target_name.upper())
-
-  git_apply_patch(new_patch_file_path)
-  git_add(environment_path)
-  git_commit(f"Add target {target_name} to Clang build system")
-
-  os.remove(new_patch_file_path)
-
-  info(f"Add new target to LLD build system")
-  template_patch_file_path = os.path.join(project_root, "patches", f"addTargetToLLD.patch")
-  new_patch_file_path = os.path.join(project_root, "patches", f"add{target_name}ToLLD.patch")
-  copy_file(template_patch_file_path, new_patch_file_path)
-
-  search_replace_in_file(new_patch_file_path, template_target_name.lower(), target_name.lower(), 
-                                template_target_name, target_name,
-                                template_target_name.upper(), target_name.upper())
-
-  git_apply_patch(new_patch_file_path)
-  git_add(environment_path)
-  git_commit(f"Add target {target_name} to LLD build system")
-
-  os.remove(new_patch_file_path)
+  apply_patches(environment_path, target_name, arch, endianess)
 
   copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
-  git_add(os.path.join(environment_path, "tasks.py"))
-  git_commit("Add compile invoke task to the new environment")
-
   os.chdir(project_root)
   
   info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
