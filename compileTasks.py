@@ -6,15 +6,18 @@ from datetime import datetime
 
 # ==================================================================================================================
 
-def info (msg):
+
+def info(msg):
   print(f"INFO: {msg}")
 
-def error (msg):
+
+def error(msg):
   print(f"ERROR: {msg}")
 
 # ==================================================================================================================
 
-@task(aliases = ['b'], 
+
+@task(aliases=['b'],
       help={"upstream_targets": "List of upstream targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc. If not defined, the targets are read from the upstream_targets_to_build.ini file",
             "experimental_targets": "List of experimental targets to build, Strings separated by ';' (semicolon). Example: 'TriCore;RISCW;etc'. If not defined, the targets are read from the experimental_targets_to_build.ini file",
             "path": "Path to llvm source root. By default the current directory is considered",
@@ -30,18 +33,21 @@ def build_target(c, upstream_targets="", experimental_targets="", path=".", debu
   # This is useful because the user may want to build multiple targets and it is easier to define them in a file than to provide them as a parameter
   if experimental_targets == "":
     with open(os.path.join(os.getcwd(), "experimental_targets_to_build.ini"), "r") as f:
-      experimental_targets = ";".join([line.strip() for line in f if not line.strip().startswith("#")])
-  
+      experimental_targets = ";".join(
+          [line.strip() for line in f if not line.strip().startswith("#")])
+
   if upstream_targets == "":
     with open(os.path.join(os.getcwd(), "upstream_targets_to_build.ini"), "r") as f:
-      upstream_targets = ";".join([line.strip() for line in f if not line.strip().startswith("#")])
+      upstream_targets = ";".join(
+          [line.strip() for line in f if not line.strip().startswith("#")])
 
   if experimental_targets == "" and upstream_targets == "":
     raise ValueError("Please provide at least one target to build.")
-  
+
   if debug == release:
-    raise ValueError("Please provide only one of the build types: Debug or Release")
-  
+    raise ValueError(
+        "Please provide only one of the build types: Debug or Release")
+
   if debug:
     release = False
   else:
@@ -58,7 +64,7 @@ def build_target(c, upstream_targets="", experimental_targets="", path=".", debu
   enable_clang_lld = "-DLLVM_ENABLE_PROJECTS=\"clang;lld\"" if not llc_only else ""
   enable_assertions = "-DLLVM_ENABLE_ASSERTIONS=ON" if build_type == "Debug" else "-DLLVM_ENABLE_ASSERTIONS=OFF"
   cmake_command = f'cmake -S llvm -B {build_dir} -G Ninja {enable_clang_lld} -DCMAKE_INSTALL_PREFIX={build_dir} {enable_assertions} -DCMAKE_BUILD_TYPE={build_type} -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="{experimental_targets}" -DLLVM_TARGETS_TO_BUILD="{upstream_targets}" -DLLVM_PARALLEL_LINK_JOBS={parallel_link_jobs} -DLLVM_USE_LINKER=lld'
-  
+
   info(f"Configuring {experimental_targets} ... ")
   info(f"Cmake command: {cmake_command}")
 
@@ -76,7 +82,7 @@ def build_target(c, upstream_targets="", experimental_targets="", path=".", debu
 
   cores = multiprocessing.cpu_count()
   build_command = f'ninja -j {cores - 1}'
-    
+
   info(f"Build command: {build_command}")
   info(f"Building target {experimental_targets} ...")
   process = subprocess.Popen(build_command, shell=True)

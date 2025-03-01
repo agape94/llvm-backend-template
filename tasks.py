@@ -12,42 +12,46 @@ from applyPatches import *
 LLVM_DEFAULT_VERSION = "17.0.6"
 # ==================================================================================================================
 
-def info (msg):
+
+def info(msg):
   print(f"INFO: {msg}")
 
-def error (msg):
+
+def error(msg):
   print(f"ERROR: {msg}")
 
 # ==================================================================================================================
 
+
 def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=False):
-  
+
   extract_folder_name = f"llvm-project-llvmorg-{llvm_version}"
   zip_file_name = f"{extract_folder_name}.zip"
   temp_zip_path = os.path.join(os.getcwd(), zip_file_name)
   extract_folder_path = os.path.join(extract_path, extract_folder_name)
-  
+
   LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{llvm_version}.zip"
-  
+
   if os.path.exists(temp_zip_path):
     info(f"{temp_zip_path} already exists, skipping download")
   else:
     info(f"Downloading LLVM release from {LLVM_RELEASE_LINK} ...")
     temp_zip_path = wget.download(LLVM_RELEASE_LINK, out=os.getcwd(), bar=None)
     if temp_zip_path is None:
-        raise RuntimeError(f"Encountered errors when downloading the LLVM release.")
+      raise RuntimeError(
+          f"Encountered errors when downloading the LLVM release.")
     info(f"Succesfully downloaded {temp_zip_path}")
-  
+
   info(f"Extracting {temp_zip_path} ...")
   with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
-      zip_ref.extractall(extract_path)
+    zip_ref.extractall(extract_path)
   info(f"Succesfully extracted {temp_zip_path} to {extract_path}")
 
   if cleanup:
     info(f"Cleaning up ...")
     # Try to delete the zip file.
     try:
-        os.remove(temp_zip_path)
+      os.remove(temp_zip_path)
     except OSError as e:
       # If it fails, inform the user.
       error(f"{e.filename} - {e.strerror}")
@@ -59,14 +63,17 @@ def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=
 
 # ==================================================================================================================
 
+
 def copy_directory_recursively(src, dst):
     # this call will raise an exception if something goes wrong
-    shutil.copytree(src, dst)
+  shutil.copytree(src, dst)
 
 # ==================================================================================================================
 
+
 def copy_file(src, dst):
   shutil.copyfile(src, dst)
+
 
 def write_file(path, content):
   with open(path, "a") as f:
@@ -74,25 +81,30 @@ def write_file(path, content):
 
 # ==================================================================================================================
 
+
 def check_arguments(target_name, path, arch, endianess, llvm_version):
   if not target_name[0].isupper():
-    raise ValueError(f"Please provide a valid target name (upper case and camel case when applicable)")
-  
-  if not os.path.isdir(path) :
+    raise ValueError(
+        f"Please provide a valid target name (upper case and camel case when applicable)")
+
+  if not os.path.isdir(path):
     os.mkdir(path)
 
-  if not arch in {8, 16, 32, 64} :
-    raise ValueError(f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
-  
+  if not arch in {8, 16, 32, 64}:
+    raise ValueError(
+        f"Please provide a valid architecture bit width. Possible values are: 8, 16, 32, 64")
+
   if not endianess in {"little", "big"}:
-    raise ValueError(f"Please provide a valid endianess. Possible values are: 'little' or 'big'")
+    raise ValueError(
+        f"Please provide a valid endianess. Possible values are: 'little' or 'big'")
 
   if not re.match(r"\d{1,2}\.\d{1,2}(\.\d{1,2})?", llvm_version):
-    raise ValueError("Please provide a valid LLVM version. Supported LLVM versions are 17.x.x")
-  
+    raise ValueError(
+        "Please provide a valid LLVM version. Supported LLVM versions are 17.x.x")
+
   repo_name = f"llvm-{target_name.lower()}-backend"
   new_backend_path = os.path.join(path, repo_name)
-  
+
   if os.path.exists(new_backend_path) and len(os.listdir(new_backend_path)) != 0:
     raise OSError(f"Directory {new_backend_path} is not empty. ")
 
@@ -111,9 +123,10 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   template_target_name = "Skeleton"
 
   check_arguments(target_name, path, arch, endianess, llvm_version)
-  
-  info(f"Setting up new LLVM backend development environment for the target `{target_name}`")
-  
+
+  info(
+      f"Setting up new LLVM backend development environment for the target `{target_name}`")
+
   repo_name = f"llvm-{target_name.lower()}-backend"
   environment_path = os.path.abspath(os.path.join(path, repo_name))
   project_root = os.getcwd()
@@ -123,9 +136,10 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
-  
-  write_file(os.path.join(environment_path, ".experimental_targets_to_build"), target_name)
-  
+
+  write_file(os.path.join(environment_path,
+             ".experimental_targets_to_build"), target_name)
+
   # copy the template folder to the given location
   template_path = os.path.join(project_root, template_target_name)
   target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
@@ -139,9 +153,9 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   
   info(f"Add new target to LLVM build system")
 
-  apply_patches(environment_path, target_name, arch, endianess)
-
-  copy_file(os.path.join(project_root, "compileTasks.py"), os.path.join(environment_path, "tasks.py"))
+  copy_file(os.path.join(project_root, "compileTasks.py"),
+            os.path.join(environment_path, "tasks.py"))
   os.chdir(project_root)
-  
-  info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
+
+  info(
+      f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
