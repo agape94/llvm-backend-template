@@ -1,0 +1,73 @@
+modifications:
+  - file_path: lld/ELF/Arch/Skeleton.cpp
+    changes:
+      - type: new_file
+        content: |
+          //===- Skeleton.cpp ---------------------------------------------------------===//
+          //
+          // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+          // See https://llvm.org/LICENSE.txt for license information.
+          // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+          //
+          //===----------------------------------------------------------------------===//
+          
+          #include "Symbols.h"
+          #include "Target.h"
+          #include "lld/Common/ErrorHandler.h"
+          #include "llvm/BinaryFormat/ELF.h"
+          #include "llvm/Support/Endian.h"
+          
+          using namespace llvm;
+          using namespace llvm::object;
+          using namespace llvm::support::endian;
+          using namespace llvm::ELF;
+          using namespace lld;
+          using namespace lld::elf;
+          
+          namespace {
+          class Skeleton final : public TargetInfo {
+          public:
+            Skeleton();
+            RelExpr getRelExpr(RelType type, const Symbol &s,
+                               const uint8_t *loc) const override;
+            void relocate(uint8_t *loc, const Relocation &rel,
+                          uint64_t val) const override;
+          };
+          } // namespace
+          
+          Skeleton::Skeleton() {
+            // mov.b #0, r3
+            trapInstr = {0x43, 0x43, 0x43, 0x43};
+          }
+          
+          RelExpr Skeleton::getRelExpr(RelType type, const Symbol &s,
+                                     const uint8_t *loc) const {
+            // TODO: Implement this according to the target specification.
+            switch (type) {
+            default:
+              return R_ABS;
+            }
+          }
+          
+          void Skeleton::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {}
+          
+          TargetInfo *elf::getSkeletonTargetInfo() {
+            static Skeleton target;
+            return &target;
+          }
+  - file_path: lld/ELF/CMakeLists.txt
+    changes:
+      - type: string
+        content: |
+          Arch/Skeleton.cpp
+        pattern: |
+          Arch/X86.cpp
+        relative_location: before
+  
+  # TODO See if we even still need to add the target to lld
+
+  # - file_path: lld/ELF/Driver.cpp
+  #   changes: 
+  #     - type: string
+  #       content: |
+  #         .Case("skeletonelf", {ELF32LEKind, EM_SKELETON})

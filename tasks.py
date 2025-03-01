@@ -7,7 +7,7 @@ import shutil
 import re
 from replaceString import *
 from compileTasks import *
-from applyPatches import *
+from register_target.addTarget import *
 
 LLVM_DEFAULT_VERSION = "17.0.6"
 # ==================================================================================================================
@@ -110,8 +110,9 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
 
 # ==================================================================================================================
 
-@task(aliases = ['se'], 
-      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips", 
+
+@task(aliases=['se'],
+      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips",
             "path": "Location on disk where the new environment will be placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianess": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
@@ -132,8 +133,9 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   project_root = os.getcwd()
 
   # download LLVM release
-  download_and_extract_release(extract_path=path, repo_name=repo_name, llvm_version=llvm_version)
-  
+  download_and_extract_release(
+      extract_path=path, repo_name=repo_name, llvm_version=llvm_version)
+
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
 
@@ -142,16 +144,20 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
 
   # copy the template folder to the given location
   template_path = os.path.join(project_root, template_target_name)
-  target_folder_path = os.path.join(environment_path, "llvm", "lib" ,"Target", target_name)
-  info(f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
+  target_folder_path = os.path.join(
+      environment_path, "llvm", "lib", "Target", target_name)
+  info(
+      f"Copying the template folder {template_path} into the {target_folder_path} folder ... ")
   copy_directory_recursively(src=template_path, dst=target_folder_path)
-  
+
   # replace all occurences of `template_target_name` with the given target name
-  info(f"Search and replace `{template_target_name}` target name with {target_name} in the backend folder ... ")
+  info(
+      f"Search and replace `{template_target_name}` target name with {target_name} in the backend folder ... ")
   if target_name != template_target_name:
-    search_replace_in_directory(target_folder_path, target_name, search_string=template_target_name)
-  
-  info(f"Add new target to LLVM build system")
+    search_replace_in_directory(
+        target_folder_path, target_name, search_string=template_target_name)
+
+  addTarget(target_name, arch, endianess, environment_path)
 
   copy_file(os.path.join(project_root, "compileTasks.py"),
             os.path.join(environment_path, "tasks.py"))
