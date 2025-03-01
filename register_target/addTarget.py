@@ -7,7 +7,6 @@ from enum import Enum
 from .utils import *
 from .modifications import *
 from .parseCpp import *
-from .addContent import *
 
 
 def addTarget(target_name, bit_width, endianness, environment_path):
