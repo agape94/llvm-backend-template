@@ -1,7 +1,7 @@
 import clang
 from clang.cindex import Index, Config, CursorKind
 from .parseCpp import *
-from .variables import CONFIG_ROOT
+from variables import CONFIG_ROOT
 from enum import Enum
 import yaml
 import platform
@@ -25,7 +25,7 @@ def visit_function_node(node, function_name, file_path, callback):
 
 
 def applyModifications(config_file, environment_path, target_name, bit_width, endianness):
-  message = f"Adding target {target_name} with bit width {bit_width} and endianness {endianness} to"
+  message = f"\nAdding target {target_name} with bit width {bit_width} and endianness {endianness} to"
 
   if config_file == PROJECT.LLVM:
     message += " LLVM ..."
@@ -93,6 +93,8 @@ class Modification:
     if platform.system() == "Windows":
       self.file_path = str(PureWindowsPath(self.file_path))
 
+    print(f"  - {self.file_path}")
+
     for change in self.changes:
       change.apply(self.file_path, target_name, bit_width, endianness)
 
@@ -101,7 +103,7 @@ class Modification:
       if pattern is not None and content is not None:
         self.file_path = self.file_path.replace(pattern, content)
 
-    replace("<Target>", target_name.capitalize())
+    replace("<Target>", target_name)
     replace("<TARGET>", target_name.upper())
     replace("<target>", target_name.lower())
     replace("<endianness>", endianness)
@@ -188,7 +190,7 @@ class Change:
           self.wrong_bit_width_content = self.wrong_bit_width_content.replace(
               pattern, content)
 
-    replace("<Target>", target_name.capitalize())
+    replace("<Target>", target_name)
     replace("<TARGET>", target_name.upper())
     replace("<target>", target_name.lower())
 

@@ -9,7 +9,6 @@ from replaceString import *
 from compileTasks import *
 from register_target.addTarget import *
 
-LLVM_DEFAULT_VERSION = "17.0.6"
 # ==================================================================================================================
 
 
@@ -46,15 +45,6 @@ def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=
   with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
     zip_ref.extractall(extract_path)
   info(f"Succesfully extracted {temp_zip_path} to {extract_path}")
-
-  if cleanup:
-    info(f"Cleaning up ...")
-    # Try to delete the zip file.
-    try:
-      os.remove(temp_zip_path)
-    except OSError as e:
-      # If it fails, inform the user.
-      error(f"{e.filename} - {e.strerror}")
 
   env_folder_path = os.path.join(extract_path, repo_name)
   info(f"Renaming folder to {repo_name} ...")

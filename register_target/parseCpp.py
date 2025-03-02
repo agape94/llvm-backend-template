@@ -1,7 +1,7 @@
 from clang.cindex import Index
 import os
 from pathlib import PureWindowsPath
-from .variables import LLVM_TOOLCHAIN_PATH, LLVM_TOOLCHAIN_BASE_VERSION
+from variables import LLVM_TOOLCHAIN_PATH, LLVM_TOOLCHAIN_BASE_VERSION
 
 
 def parseFile(file_path):
@@ -22,7 +22,6 @@ def parseFile(file_path):
 
   args = [
       f"-std={CPP_STANDARD}",
-      f"-I{LLVM_TOOLCHAIN_INCLUDE_PATH}",
       f"-I{CLANG_RESOURCE_PATH}",
       f"-I{CPP_INCLUDE_PATH}",
       f"-I{LLVM_INCLUDE_PATH}",
