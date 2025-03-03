@@ -2,8 +2,9 @@ import os
 import platform
 
 TEMPLATE_TARGET_NAME = "Skeleton"
-
-LLVM_DEFAULT_VERSION = "17.0.6"
+EXPERIMENTAL_TARGETS_FILE = "experimental_targets_to_build.ini"
+UPSTREAM_TARGETS_FILE = "official_targets_to_build.ini"
+LLVM_DEFAULT_VERSION = "19.1.7"
 
 ROOT_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
 CONTRIB_ROOT = os.path.abspath(os.path.join(ROOT_DIRECTORY, "contrib"))

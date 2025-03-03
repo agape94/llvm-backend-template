@@ -121,6 +121,16 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   addNewTargetToExistingEnvironment(
       c, target_name, environment_path, arch, endianness, new_environment=True)
 
+  copy_file(os.path.join(ROOT_DIRECTORY, "compileTasks.py"),
+            os.path.join(environment_path, "tasks.py"))
+
+  copy_file(os.path.join(ROOT_DIRECTORY, "variables.py"),
+            os.path.join(environment_path, "variables.py"))
+
+  copy_file(os.path.join(ROOT_DIRECTORY, UPSTREAM_TARGETS_FILE),
+            os.path.join(environment_path, UPSTREAM_TARGETS_FILE))
+
+
 # ==================================================================================================================
 
 
@@ -131,7 +141,8 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
 def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False):
   write_file(os.path.join(environment_path,
-             ".experimental_targets_to_build"), target_name)
+             EXPERIMENTAL_TARGETS_FILE), target_name)
+
   # copy the template folder to the given location
   template_path = os.path.join(ROOT_DIRECTORY, TEMPLATE_TARGET_NAME)
   target_folder_path = os.path.join(

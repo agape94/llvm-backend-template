@@ -3,6 +3,7 @@ import os
 import multiprocessing
 import subprocess
 from datetime import datetime
+from variables import *
 
 # ==================================================================================================================
 
@@ -32,12 +33,12 @@ def build_target(c, upstream_targets="", experimental_targets="", path=".", debu
   # Check if there are any targets to build defined in the .*_targets_to_build files if the respective parameters are not provided
   # This is useful because the user may want to build multiple targets and it is easier to define them in a file than to provide them as a parameter
   if experimental_targets == "":
-    with open(os.path.join(os.getcwd(), "experimental_targets_to_build.ini"), "r") as f:
+    with open(os.path.join(os.getcwd(), EXPERIMENTAL_TARGETS_FILE), "r") as f:
       experimental_targets = ";".join(
           [line.strip() for line in f if not line.strip().startswith("#")])
 
   if upstream_targets == "":
-    with open(os.path.join(os.getcwd(), "upstream_targets_to_build.ini"), "r") as f:
+    with open(os.path.join(os.getcwd(), UPSTREAM_TARGETS_FILE), "r") as f:
       upstream_targets = ";".join(
           [line.strip() for line in f if not line.strip().startswith("#")])
 
