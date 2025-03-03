@@ -8,16 +8,8 @@ import re
 from replaceString import *
 from compileTasks import *
 from register_target.addTarget import *
-
-# ==================================================================================================================
-
-
-def info(msg):
-  print(f"INFO: {msg}")
-
-
-def error(msg):
-  print(f"ERROR: {msg}")
+from variables import *
+from utils import *
 
 # ==================================================================================================================
 
@@ -105,22 +97,19 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips",
             "path": "Location on disk where the new environment will be placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
-            "endianess": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
+            "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
             "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
-def setup_new_environment(c, target_name, path, arch=32, endianess="little", llvm_version=LLVM_DEFAULT_VERSION):
+def setup_new_environment(c, target_name, path, arch=32, endianness="little", llvm_version=LLVM_DEFAULT_VERSION):
   """
     Setup a new LLVM backend development environment for the given target name.
   """
-  template_target_name = "Skeleton"
-
-  check_arguments(target_name, path, arch, endianess, llvm_version)
+  check_arguments(target_name, path, arch, endianness, llvm_version)
 
   info(
       f"Setting up new LLVM backend development environment for the target `{target_name}`")
 
   repo_name = f"llvm-{target_name.lower()}-backend"
   environment_path = os.path.abspath(os.path.join(path, repo_name))
-  project_root = os.getcwd()
 
   # download LLVM release
   download_and_extract_release(
@@ -129,11 +118,22 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
 
+  addNewTargetToExistingEnvironment(
+      c, target_name, environment_path, arch, endianness, new_environment=True)
+
+# ==================================================================================================================
+
+
+@task(aliases=['nte'],
+      help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips",
+            "environment_path": "Location on disk where the existing environment is placed",
+            "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
+            "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
+def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False):
   write_file(os.path.join(environment_path,
              ".experimental_targets_to_build"), target_name)
-
   # copy the template folder to the given location
-  template_path = os.path.join(project_root, template_target_name)
+  template_path = os.path.join(ROOT_DIRECTORY, TEMPLATE_TARGET_NAME)
   target_folder_path = os.path.join(
       environment_path, "llvm", "lib", "Target", target_name)
   info(
@@ -142,16 +142,16 @@ def setup_new_environment(c, target_name, path, arch=32, endianess="little", llv
 
   # replace all occurences of `template_target_name` with the given target name
   info(
-      f"Search and replace `{template_target_name}` target name with {target_name} in the backend folder ... ")
-  if target_name != template_target_name:
+      f"Search and replace `{TEMPLATE_TARGET_NAME}` target name with {target_name} in the backend folder ... ")
+  if target_name != TEMPLATE_TARGET_NAME:
     search_replace_in_directory(
-        target_folder_path, target_name, search_string=template_target_name)
+        target_folder_path, target_name, search_string=TEMPLATE_TARGET_NAME)
 
-  addTarget(target_name, arch, endianess, environment_path)
+  addTarget(target_name, arch, endianness, environment_path)
 
-  copy_file(os.path.join(project_root, "compileTasks.py"),
-            os.path.join(environment_path, "tasks.py"))
-  os.chdir(project_root)
-
-  info(
-      f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
+  if not new_environment:
+    info(
+        f"Successfully added new target {target_name} to existing environment at {environment_path}")
+  else:
+    info(
+        f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
