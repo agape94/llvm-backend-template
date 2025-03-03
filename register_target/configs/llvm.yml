@@ -1,36 +1,32 @@
 modifications:
   - file_path: llvm/include/llvm/Object/ELFObjectFile.h
     changes:
-    - type: switch_case_nested
-      location: getFileFormatName
+    - type: string
       content: >2
             case ELF::EM_<TARGET>:
               return "elf<bit-width>-<target>";
-      parent_switch_condition: EF.getHeader().e_ident[ELF::EI_CLASS]
-      switch_condition: EF.getHeader().e_machine
-      parent_case_name: ELF::ELFCLASS<bit-width>
-      min_bit_width: 32
-    - type: switch_case
-      location: getArch
+      pattern: ELF::ELFCLASS<bit-width>
+      offset: 1
+      relative_location: after
+    - type: string
       content: >2
           case ELF::EM_<TARGET>:
             return Triple::<target>;
-      switch_condition: EF.getHeader().e_machine
+      pattern: return Triple::xtensa;
+      relative_location: after 
   - file_path: llvm/include/llvm/BinaryFormat/ELF.h
     changes:
-    - type: unnamed_enum_value
-      location: 
+    - type: string
       content: >2
-          EM_<TARGET>
-      pattern: EM_
-      value: true
-      comment: >2
-        // <Target>: <Target> <bit-width>-bit architecture
+          EM_<TARGET> = 300, // <Target>: <Target> <bit-width>-bit architecture
+      pattern: EM_LOONGARCH = 258
+      relative_location: after
     - type: string
       pattern: "#define ELF_RELOC(name, value) name = value,"
       relative_location: after
       content: >2  
         // ELF Relocation type for <Target>.
+        
         enum {
           #include "ELFRelocs/<Target>.def"
         };
@@ -38,22 +34,23 @@ modifications:
     changes:
     - type: new_file
       content: >2
-          #ifndef ELF_RELOC
-          #error "ELF_RELOC must be defined"
-          #endif
+        #ifndef ELF_RELOC
 
-          // No relocation
-          ELF_RELOC(R_<TARGET>_NONE,        0)
+        #error "ELF_RELOC must be defined"
+
+        #endif
+
+        // No relocation
+
+        ELF_RELOC(R_<TARGET>_NONE,        0)
   - file_path: llvm/include/llvm/TargetParser/Triple.h
     changes:
-    - type: named_enum_value
-      location: ArchType
+    - type: string
       content: >2
-            <target>
-      comment: >2
-        // <Target>: <Target> <bit-width>-bit architecture
-      pattern: ve
+            <target>, // <Target>: <Target> <bit-width>-bit architecture
+      pattern: LastArchType
       relative_location: before
+      offset: 1
     - type: string
       pattern: isX86
       relative_location: before
@@ -70,16 +67,17 @@ modifications:
               .Case("<target>", EM_<TARGET>)
       pattern: .Default(EM_NONE);
       relative_location: before
-    - type: switch_case
-      location: convertEMachineToArchName
+    - type: string
       content: >2
           case ELF::EM_<TARGET>:
             return "<target>";
-      switch_condition: EMachine
+      pattern: >2
+        case EM_NONE:
+      relative_location: after
+      offset: 1  
   - file_path: llvm/lib/Object/ELF.cpp
     changes:
-    - type: switch_case
-      location: getELFRelocationTypeName
+    - type: string
       content: >2
           case ELF::EM_<TARGET>:
             switch (Type) {
@@ -88,13 +86,17 @@ modifications:
               break;
             }
             break;
-      switch_condition: Machine
-    - type: switch_case
-      location: getELFRelativeRelocationType
+      pattern: >2
+        #include "llvm/BinaryFormat/ELFRelocs/M68k.def"
+      relative_location: before
+      offset: 2
+    - type: string
+      pattern: getELFRelativeRelocationType
       content: >2
           case ELF::EM_<TARGET>:
             break;
-      switch_condition: Machine
+      relative_location: after
+      offset: 1
   - file_path: llvm/lib/Object/RelocationResolver.cpp
     changes:
     - type: string
@@ -134,63 +136,66 @@ modifications:
       offset: 1
   - file_path: llvm/lib/TargetParser/Triple.cpp
     changes:
-    - type: switch_case
-      location: getArchTypeName
-      content: >2
-          case <target>: return "<target>";
-      switch_condition: Kind
-    - type: switch_case
-      location: getArchTypePrefix
-      content: >2
-          case <target>: return "<target>";
-      switch_condition: Kind
     - type: string
-      location: getArchTypeForLLVMName
+      pattern: case UnknownArch
+      content: >2
+          case <target>: return "<target>";
+      relative_location: after
+      offset: 1
+    - type: string
+      content: >2
+          case <target>: return "<target>";
+      pattern: getArchTypePrefix
+      offset: 1
+      relative_location: after
+    - type: string
       content: >2
             .Case("<target>", <target>)
       pattern: .Default(UnknownArch);
       relative_location: before
     - type: string
-      location: parseArch
       content: >2
-            .Case("<target>", Triple::<target>)
+                  .Case("<target>", Triple::<target>)
       pattern: .Default(Triple::UnknownArch);
       relative_location: before
-    - type: switch_case
-      location: getDefaultFormat
+    - type: string
+      pattern: switch (T.getArch())
       content: >2
           case Triple::<target>:
-            return ELF;
-      switch_condition: T.getArch()
-    - type: switch_case
-      location: getArchPointerBitWidth
+            return Triple::ELF;
+      relative_location: after
+    - type: string
+      pattern: case llvm::Triple::UnknownArch
       content: >2
           case Triple::<target>:
             return <bit-width>;
-      switch_condition: Arch
-    - type: switch_case
-      location: get32BitArchVariant
+      relative_location: before
+    - type: string
+      pattern: get32BitArchVariant
       content: >2
           case Triple::<target>:
       correct_bit_width_content: >2
             break;
       wrong_bit_width_content: >2
             T.setArch(Triple::UnknownArch);
-      switch_condition: getArch()
+      relative_location: after
+      offset: 2
       bit_width: 32
-    - type: switch_case
-      location: get64BitArchVariant
+    - type: string
+      pattern: get64BitArchVariant
       content: >2
           case Triple::<target>:
       correct_bit_width_content: >2
             break;
       wrong_bit_width_content: >2
             T.setArch(Triple::UnknownArch);
-      switch_condition: getArch()
+      relative_location: after
+      offset: 2
       bit_width: 64
-    - type: switch_case
-      location: isLittleEndian
+    - type: string
+      pattern: bool Triple::isLittleEndian() const
       content: >2
           case Triple::<target>:
-      switch_condition: getArch()
       endianness: little
+      relative_location: after
+      offset: 1

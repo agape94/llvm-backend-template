@@ -1,11 +1,8 @@
-import clang.cindex
-from clang.cindex import Index, Config, CursorKind
 import platform
 import os
 from pathlib import PureWindowsPath
 from enum import Enum
 from .modifications import *
-from .parseCpp import *
 
 
 def addTarget(target_name, bit_width, endianness, environment_path):

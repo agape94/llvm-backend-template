@@ -14,27 +14,37 @@ modifications:
       pattern: >2
         #include "Targets.h"
       relative_location: after
-    - type: switch_case
-      location: AllocateTarget
+      offset: 1
+    - type: string
+      pattern: case llvm::Triple::lanai
       content: >2
           case llvm::Triple::<target>:
             return std::make_unique<<Target>TargetInfo>(Triple, Opts);
-      switch_condition: T.getArch()
-  
+      relative_location: before  
   - file_path: clang/lib/Basic/Targets/<Target>.cpp
     changes:
     - type: new_file
       content: >2
         //===--- <Target>.cpp - Implement <Target> target feature support ---------------===//
+        
         //
+        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+        
         // See https://llvm.org/LICENSE.txt for license information.
+        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+        
         //
+        
         //===----------------------------------------------------------------------===//
+        
         //
+        
         // This file implements <Target> TargetInfo objects.
+        
         //
+        
         //===----------------------------------------------------------------------===//
         
         #include "<Target>.h"
@@ -100,108 +110,124 @@ modifications:
         }
   
   - file_path: clang/lib/Basic/Targets/<Target>.h
-    content: >2
-      //===--- <Target>.h - Declare <Target> target feature support ---------*- C++ -*-===//
-      //
-      // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-      // See https://llvm.org/LICENSE.txt for license information.
-      // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-      //
-      //===----------------------------------------------------------------------===//
-      //
-      // This file declares <Target> TargetInfo objects.
-      //
-      //===----------------------------------------------------------------------===//
-      
-      #ifndef LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
-      #define LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
-      
-      #include "clang/Basic/TargetInfo.h"
-      #include "clang/Basic/TargetOptions.h"
-      #include "llvm/Support/Compiler.h"
-      #include "llvm/TargetParser/Triple.h"
-      
-      namespace clang {
-      namespace targets {
-      
-      class LLVM_LIBRARY_VISIBILITY <Target>TargetInfo : public TargetInfo {
-        // Class for <Target> (32-bit).
-        // The CPU profiles supported by the <Target> backend
-        enum CPUKind {
-          CK_NONE,
-          CK_V11,
-        } CPU;
-      
-        static const TargetInfo::GCCRegAlias GCCRegAliases[];
-        static const char *const GCCRegNames[];
-      
-      public:
-        <Target>TargetInfo(const llvm::Triple &Triple, const TargetOptions &)
-            : TargetInfo(Triple) {
-          // Description string has to be kept in sync with backend.
-          // resetDataLayout("E"        // Big endian
-          //                 "-m:e"     // ELF name manging
-          //                 "-p:32:32" // 32 bit pointers, 32 bit aligned
-          //                 "-i64:64"  // 64 bit integers, 64 bit aligned
-          //                 "-a:0:32"  // 32 bit alignment of objects of aggregate type
-          //                 "-n32"     // 32 bit native integer width
-          //                 "-S64"     // 64 bit natural stack alignment
-          //);
+    changes:
+    - type: new_file
+      content: >2
+        //===--- <Target>.h - Declare <Target> target feature support ---------*- C++ -*-===//
+        
+        //
+        
+        // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+        
+        // See https://llvm.org/LICENSE.txt for license information.
+        
+        // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+        
+        //
+        
+        //===----------------------------------------------------------------------===//
+        
+        //
+        
+        // This file declares <Target> TargetInfo objects.
+        
+        //
+        
+        //===----------------------------------------------------------------------===//
+        
+        #ifndef LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
+        
+        #define LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
+        
+        #include "clang/Basic/TargetInfo.h"
+        
+        #include "clang/Basic/TargetOptions.h"
+        
+        #include "llvm/Support/Compiler.h"
+        
+        #include "llvm/TargetParser/Triple.h"
+        
+        namespace clang {
+        
+        namespace targets {
+        
+        class LLVM_LIBRARY_VISIBILITY <Target>TargetInfo : public TargetInfo {
+          // Class for <Target> (32-bit).
+          // The CPU profiles supported by the <Target> backend
+          enum CPUKind {
+            CK_NONE,
+          } CPU;
+        
+          static const TargetInfo::GCCRegAlias GCCRegAliases[];
+          static const char *const GCCRegNames[];
+        
+        public:
+          <Target>TargetInfo(const llvm::Triple &Triple, const TargetOptions &)
+              : TargetInfo(Triple) {
+            // Description string has to be kept in sync with backend.
+            // resetDataLayout("E"        // Big endian
+            //                 "-m:e"     // ELF name manging
+            //                 "-p:32:32" // 32 bit pointers, 32 bit aligned
+            //                 "-i64:64"  // 64 bit integers, 64 bit aligned
+            //                 "-a:0:32"  // 32 bit alignment of objects of aggregate type
+            //                 "-n32"     // 32 bit native integer width
+            //                 "-S64"     // 64 bit natural stack alignment
+            //);
 
-          // This assert was left intentionally to remind the user to implement the resetDataLayout according to the target
-          assert(false && "resetDataLayout function not implemented. Please implement it according to the particularities of your target.");
-      
-          // Setting RegParmMax equal to what mregparm was set to in the old
-          // toolchain
-          RegParmMax = 4;
-      
-          // Set the default CPU to V11
-          CPU = CK_V11;
-      
-          // Temporary approach to make everything at least word-aligned and allow for
-          // safely casting between pointers with different alignment requirements.
-          // TODO: Remove this when there are no more cast align warnings on the
-          // firmware.
-          MinGlobalAlign = 32;
-        }
-      
-        void getTargetDefines(const LangOptions &Opts,
-                              MacroBuilder &Builder) const override;
-      
-        bool isValidCPUName(StringRef Name) const override;
-      
-        void fillValidCPUList(SmallVectorImpl<StringRef> &Values) const override;
-      
-        bool setCPU(const std::string &Name) override;
-      
-        bool hasFeature(StringRef Feature) const override;
-      
-        ArrayRef<const char *> getGCCRegNames() const override;
-      
-        ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override;
-      
-        BuiltinVaListKind getBuiltinVaListKind() const override {
-          return TargetInfo::VoidPtrBuiltinVaList;
-        }
-      
-        ArrayRef<Builtin::Info> getTargetBuiltins() const override {
-          return std::nullopt;
-        }
-      
-        bool validateAsmConstraint(const char *&Name,
-                                    TargetInfo::ConstraintInfo &info) const override {
-          return false;
-        }
-      
-        std::string_view getClobbers() const override { return ""; }
-      
-        bool hasBitIntType() const override { return true; }
-      };
-      } // namespace targets
-      } // namespace clang
-      
-      #endif // LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
-  
+            // This assert was left intentionally to remind the user to implement the resetDataLayout according to the target
+            assert(false && "resetDataLayout function not implemented. Please implement it according to the particularities of your target.");
+        
+            // Setting RegParmMax equal to what mregparm was set to in the old
+            // toolchain
+            RegParmMax = 4;
+        
+            // Set the default CPU
+            CPU = CK_NONE;
+        
+            // Temporary approach to make everything at least word-aligned and allow for
+            // safely casting between pointers with different alignment requirements.
+            // TODO: Remove this when there are no more cast align warnings on the
+            // firmware.
+            MinGlobalAlign = 32;
+          }
+        
+          void getTargetDefines(const LangOptions &Opts,
+                                MacroBuilder &Builder) const override;
+        
+          bool isValidCPUName(StringRef Name) const override;
+        
+          void fillValidCPUList(SmallVectorImpl<StringRef> &Values) const override;
+        
+          bool setCPU(const std::string &Name) override;
+        
+          bool hasFeature(StringRef Feature) const override;
+        
+          ArrayRef<const char *> getGCCRegNames() const override;
+        
+          ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override;
+        
+          BuiltinVaListKind getBuiltinVaListKind() const override {
+            return TargetInfo::VoidPtrBuiltinVaList;
+          }
+        
+          ArrayRef<Builtin::Info> getTargetBuiltins() const override {
+            return std::nullopt;
+          }
+        
+          bool validateAsmConstraint(const char *&Name,
+                                      TargetInfo::ConstraintInfo &info) const override {
+            return false;
+          }
+        
+          std::string_view getClobbers() const override { return ""; }
+        
+          bool hasBitIntType() const override { return true; }
+        };
+        } // namespace targets
+        } // namespace clang
+        
+        #endif // LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
+    
   - file_path: clang/lib/CodeGen/CMakeLists.txt
     changes: 
     - type: string
@@ -212,18 +238,21 @@ modifications:
   
   - file_path: clang/lib/CodeGen/CodeGenModule.cpp
     changes: 
-    - type: switch_case
-      location: createTargetCodeGenInfo
+    - type: string
       content: >2
+          
           case llvm::Triple::<target>:
             return create<Target>TargetCodeGenInfo(CGM);
-      switch_condition: Triple.getArch()
+      pattern: return createDefaultTargetCodeGenInfo(CGM)
+      relative_location: after
   
   - file_path: clang/lib/CodeGen/TargetInfo.h
     changes:
     - type: string
       content: >2
+        
         std::unique_ptr<TargetCodeGenInfo>
+        
         create<Target>TargetCodeGenInfo(CodeGenModule &CGM);
       pattern: createXCoreTargetCodeGenInfo(CodeGenModule &CGM);
       relative_location: after
@@ -233,11 +262,17 @@ modifications:
     - type: new_file
       content: >2
         //===- <Target>.cpp ----------------------------------------------------------===//
+        
         //
+        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+        
         // See https://llvm.org/LICENSE.txt for license information.
+        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+        
         //
+        
         //===----------------------------------------------------------------------===//
         
         #include "ABIInfoImpl.h"
@@ -249,7 +284,9 @@ modifications:
         using namespace clang::CodeGen;
         
         //===----------------------------------------------------------------------===//
+        
         // <Target> ABI Implementation
+        
         //===----------------------------------------------------------------------===//
         
         namespace {
@@ -282,6 +319,7 @@ modifications:
           ABIArgInfo getIndirectResult(QualType Ty, bool ByVal, CCState &State) const;
           ABIArgInfo classifyArgumentType(QualType RetTy, CCState &State) const;
         };
+        
         } // end anonymous namespace
         
         bool <Target>ABIInfo::shouldUseInReg(QualType Ty, CCState &State) const {
@@ -406,13 +444,14 @@ modifications:
       relative_location: before
   - file_path: clang/lib/Driver/ToolChains/Clang.cpp
     changes:
-      - type: switch_case
+      - type: string
         content: >2
             case llvm::Triple::<target>:
               Add<Target>TargetArgs(Args, CmdArgs);
               break;
-        location: RenderTargetOptions
-        switch_condition: TC.getArch()
+        pattern: AddLanaiTargetArgs(Args, CmdArgs);
+        relative_location: after
+        offset: 1
       - type: string
         content: >2
           void Clang::Add<Target>TargetArgs(const ArgList &Args,
@@ -437,15 +476,14 @@ modifications:
               }
             }
           }
-        pattern: >2
-          void Clang::AddHexagonTargetArgs
+        pattern: void Clang::AddHexagonTargetArgs
         relative_location: before
   
   - file_path: clang/lib/Driver/ToolChains/Clang.h
     changes:
       - type: string
         content: >2
-          void Add<Target>TargetArgs(const llvm::opt::ArgList &Args, llvm::opt::ArgStringList &CmdArgs) const;
+            void Add<Target>TargetArgs(const llvm::opt::ArgList &Args, llvm::opt::ArgStringList &CmdArgs) const;
         pattern: >2
           private:
         relative_location: after
@@ -463,33 +501,43 @@ modifications:
         pattern: >2
           static std::string getLanaiTargetCPU(const ArgList &Args) {
         relative_location: before
-      - type: switch_case
+      - type: string
         content: >2
-          case llvm::Triple::<target>:
-            return get<Target>TargetCPU(Args);
-        location: getCPUName
-        switch_condition: T.getArch()
+            case llvm::Triple::<target>:
+              return get<Target>TargetCPU(Args);
+        pattern: return getLanaiTargetCPU(Args);
+        relative_location: after
   
   - file_path: clang/lib/Driver/ToolChains/<Target>.h
     changes:
       - type: new_file 
         content: >2
           //===--- <Target>.h - <Target> ToolChain Implementations --------------*- C++ -*-===//
+          
           //
+          
           // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+          
           // See https://llvm.org/LICENSE.txt for license information.
+          
           // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+          
           //
+          
           //===----------------------------------------------------------------------===//
           
           #ifndef LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_<TARGET>_H
+          
           #define LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_<TARGET>_H
           
           #include "Gnu.h"
+          
           #include "clang/Driver/ToolChain.h"
           
           namespace clang {
+          
           namespace driver {
+          
           namespace toolchains {
           
           class LLVM_LIBRARY_VISIBILITY <Target>ToolChain : public Generic_ELF {
@@ -508,7 +556,9 @@ modifications:
           };
           
           } // end namespace toolchains
+          
           } // end namespace driver
+          
           } // end namespace clang
           
           #endif // LLVM_CLANG_LIB_DRIVER_TOOLCHAINS_<TARGET>_H

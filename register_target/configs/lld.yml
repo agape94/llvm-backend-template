@@ -1,9 +1,9 @@
 modifications:
-  - file_path: lld/ELF/Arch/Skeleton.cpp
+  - file_path: lld/ELF/Arch/<Target>.cpp
     changes:
       - type: new_file
         content: |
-          //===- Skeleton.cpp ---------------------------------------------------------===//
+          //===- <Target>.cpp ---------------------------------------------------------===//
           //
           // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
           // See https://llvm.org/LICENSE.txt for license information.
@@ -16,7 +16,6 @@ modifications:
           #include "lld/Common/ErrorHandler.h"
           #include "llvm/BinaryFormat/ELF.h"
           #include "llvm/Support/Endian.h"
-          
           using namespace llvm;
           using namespace llvm::object;
           using namespace llvm::support::endian;
@@ -25,22 +24,24 @@ modifications:
           using namespace lld::elf;
           
           namespace {
-          class Skeleton final : public TargetInfo {
+          
+          class <Target> final : public TargetInfo {
           public:
-            Skeleton();
+            <Target>();
             RelExpr getRelExpr(RelType type, const Symbol &s,
                                const uint8_t *loc) const override;
             void relocate(uint8_t *loc, const Relocation &rel,
                           uint64_t val) const override;
           };
+          
           } // namespace
           
-          Skeleton::Skeleton() {
+          <Target>::<Target>() {
             // mov.b #0, r3
             trapInstr = {0x43, 0x43, 0x43, 0x43};
           }
           
-          RelExpr Skeleton::getRelExpr(RelType type, const Symbol &s,
+          RelExpr <Target>::getRelExpr(RelType type, const Symbol &s,
                                      const uint8_t *loc) const {
             // TODO: Implement this according to the target specification.
             switch (type) {
@@ -49,25 +50,61 @@ modifications:
             }
           }
           
-          void Skeleton::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {}
+          void <Target>::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {}
           
-          TargetInfo *elf::getSkeletonTargetInfo() {
-            static Skeleton target;
+          TargetInfo *elf::get<Target>TargetInfo() {
+            static <Target> target;
             return &target;
           }
   - file_path: lld/ELF/CMakeLists.txt
     changes:
       - type: string
-        content: |
-          Arch/Skeleton.cpp
-        pattern: |
-          Arch/X86.cpp
+        content: >2
+            Arch/<Target>.cpp
+        pattern: Arch/X86.cpp
         relative_location: before
   
-  # TODO See if we even still need to add the target to lld
-
-  # - file_path: lld/ELF/Driver.cpp
-  #   changes: 
-  #     - type: string
-  #       content: |
-  #         .Case("skeletonelf", {ELF32LEKind, EM_SKELETON})
+  - file_path: lld/ELF/Driver.cpp
+    changes:
+      - type: string
+        content: >2
+                    .Case("<target>elf", {ELF<bit-width>LEKind, EM_<TARGET>})
+        pattern: .Default({ELFNoneKind, EM_NONE});
+        min_bit_width: 32
+        relative_location: before
+  
+  - file_path: lld/ELF/InputFiles.cpp
+    changes:
+      - type: string
+        content: >2
+            case Triple::<target>:
+              return EM_<TARGET>;
+        pattern: switch (t.getArch())
+        relative_location: after
+  
+  - file_path: lld/ELF/ScriptParser.cpp
+    changes:
+      - type: string
+        content: >2
+                .Case("elf<bit-width>-<target>", {ELF<bit-width>LEKind, EM_<TARGET>})
+        pattern: .Default({ELFNoneKind, EM_NONE});
+        min_bit_width: 32
+        relative_location: before
+  
+  - file_path: lld/ELF/Target.cpp
+    changes:
+      - type: string
+        content: >2
+            case EM_<TARGET>:
+              return get<Target>TargetInfo();
+        pattern: switch (config->emachine)
+        relative_location: after
+  
+  - file_path: lld/ELF/Target.h
+    changes:
+      - type: string
+        content: >2
+          TargetInfo *get<Target>TargetInfo();
+        pattern: TargetInfo *getMSP430TargetInfo()
+        relative_location: after
+  
