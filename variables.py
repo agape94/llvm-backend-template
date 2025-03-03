@@ -1,6 +1,8 @@
 import os
 import platform
 
+TEMPLATE_TARGET_NAME = "Skeleton"
+
 LLVM_DEFAULT_VERSION = "17.0.6"
 
 ROOT_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
