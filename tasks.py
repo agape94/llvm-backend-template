@@ -1,65 +1,11 @@
 from invoke import task
-import subprocess
 import os
 import wget
 import zipfile
 import shutil
-import re
-from replaceString import *
-from compileTasks import *
-from register_target.addTarget import *
-from variables import *
-from utils import *
-
-# ==================================================================================================================
-
-
-def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=False):
-
-  extract_folder_name = f"llvm-project-llvmorg-{llvm_version}"
-  zip_file_name = f"{extract_folder_name}.zip"
-  temp_zip_path = os.path.join(os.getcwd(), zip_file_name)
-  extract_folder_path = os.path.join(extract_path, extract_folder_name)
-
-  LLVM_RELEASE_LINK = f"https://github.com/llvm/llvm-project/archive/refs/tags/llvmorg-{llvm_version}.zip"
-
-  if os.path.exists(temp_zip_path):
-    info(f"{temp_zip_path} already exists, skipping download")
-  else:
-    info(f"Downloading LLVM release from {LLVM_RELEASE_LINK} ...")
-    temp_zip_path = wget.download(LLVM_RELEASE_LINK, out=os.getcwd(), bar=None)
-    if temp_zip_path is None:
-      raise RuntimeError(
-          f"Encountered errors when downloading the LLVM release.")
-    info(f"Succesfully downloaded {temp_zip_path}")
-
-  info(f"Extracting {temp_zip_path} ...")
-  with zipfile.ZipFile(temp_zip_path, 'r') as zip_ref:
-    zip_ref.extractall(extract_path)
-  info(f"Succesfully extracted {temp_zip_path} to {extract_path}")
-
-  env_folder_path = os.path.join(extract_path, repo_name)
-  info(f"Renaming folder to {repo_name} ...")
-
-  os.rename(extract_folder_path, env_folder_path)
-
-# ==================================================================================================================
-
-
-def copy_directory_recursively(src, dst):
-    # this call will raise an exception if something goes wrong
-  shutil.copytree(src, dst)
-
-# ==================================================================================================================
-
-
-def copy_file(src, dst):
-  shutil.copyfile(src, dst)
-
-
-def write_file(path, content):
-  with open(path, "a") as f:
-    f.write(content)
+from lib.register_target.addTarget import *
+from lib.variables import *
+from lib.utils import *
 
 # ==================================================================================================================
 
@@ -109,7 +55,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
       f"Setting up new LLVM backend development environment for the target `{target_name}`")
 
   LLVM_VERSION_ENUM = SupportedLLVMVersions.get_llvm_version(llvm_version)
-  
+
   repo_name = f"llvm-{target_name.lower()}-backend"
   environment_path = os.path.abspath(os.path.join(path, repo_name))
 
@@ -120,17 +66,22 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
 
+  copy_file(EXPERIMENTAL_TARGETS_FILE_PATH, os.path.join(
+      environment_path, EXPERIMENTAL_TARGETS_FILE_NAME))
+
   addNewTargetToExistingEnvironment(
       c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=llvm_version)
 
-  copy_file(os.path.join(ROOT_DIRECTORY, "compileTasks.py"),
+  copy_file(os.path.join(LIB_ROOT, "tasks", "compileTasks.py.in"),
             os.path.join(environment_path, "tasks.py"))
 
-  copy_file(os.path.join(ROOT_DIRECTORY, "variables.py"),
-            os.path.join(environment_path, "variables.py"))
+  search_replace_in_file(os.path.join(environment_path, "tasks.py"),
+                         "<EXPERIMENTAL_TARGETS_FILE_NAME>", EXPERIMENTAL_TARGETS_FILE_NAME)
+  search_replace_in_file(os.path.join(environment_path, "tasks.py"),
+                         "<OFFICIAL_TARGETS_FILE_NAME>", OFFICIAL_TARGETS_FILE_NAME)
 
-  copy_file(os.path.join(ROOT_DIRECTORY, UPSTREAM_TARGETS_FILE),
-            os.path.join(environment_path, UPSTREAM_TARGETS_FILE))
+  copy_file(OFFICIAL_TARGETS_FILE_PATH, os.path.join(
+      environment_path, OFFICIAL_TARGETS_FILE_NAME))
 
 
 # ==================================================================================================================
@@ -142,13 +93,17 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
 def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION_SHORT):
+
+  check_arguments(target_name, environment_path,
+                  arch, endianness, llvm_version)
   write_file(os.path.join(environment_path,
-             EXPERIMENTAL_TARGETS_FILE), target_name)
+             EXPERIMENTAL_TARGETS_FILE_NAME), target_name)
 
   TEMPLATE_TARGET_FULL_NAME = TEMPLATE_TARGET_NAME + "-llvm-" + llvm_version
-  
+
   # copy the template folder to the given location
-  template_path = os.path.join(TEMPLATE_BACKENDS_PATH, TEMPLATE_TARGET_FULL_NAME)
+  template_path = os.path.join(
+      TEMPLATE_BACKENDS_PATH, TEMPLATE_TARGET_FULL_NAME)
   target_folder_path = os.path.join(
       environment_path, "llvm", "lib", "Target", target_name)
   info(

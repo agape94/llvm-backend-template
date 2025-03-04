@@ -1,9 +1,8 @@
 import platform
 import os
 from pathlib import PureWindowsPath
-from enum import Enum
 from .modifications import *
-from variables import *
+from lib.variables import *
 
 
 def addTarget(target_name, bit_width, endianness, environment_path, llvm_version=LLVM_DEFAULT_VERSION_SHORT):

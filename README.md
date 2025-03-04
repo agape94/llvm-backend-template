@@ -87,7 +87,7 @@ Options:
   -p STRING, --path=STRING               Path to llvm source root. By default the current directory is considered
   -t STRING, --target-name=STRING        The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM,
                                          Mips
-  -u STRING, --upstream-targets=STRING   List of upstream targets to build, Strings separated by ';' (semicolon). By default
+  -u STRING, --official-targets=STRING   List of LLVM official targets to build, Strings separated by ';' (semicolon). By default
                                          it is None. Example: Lanai;ARM;RISCV;etc
 ```
 

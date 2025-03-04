@@ -1,11 +1,12 @@
-from variables import CONFIG_ROOT
+from lib.variables import CONFIG_ROOT
 from enum import Enum
 import yaml
 import platform
 from pathlib import PureWindowsPath
-from utils import *
 import os
-from variables import *
+from lib.utils import *
+from lib.variables import *
+
 
 class PROJECT(Enum):
   LLVM = "llvm.yml"

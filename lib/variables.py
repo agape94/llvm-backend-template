@@ -1,6 +1,6 @@
 import os
-import platform
 from enum import Enum
+
 
 class SupportedLLVMVersions(Enum):
   # We are supporting the latest major releases of LLVM
@@ -15,13 +15,22 @@ class SupportedLLVMVersions(Enum):
     except KeyError:
       raise ValueError(f"Unsupported LLVM version: {version_number}")
 
-ROOT_DIRECTORY = os.path.abspath(os.path.dirname(__file__))
+
+LIB_ROOT = os.path.abspath(os.path.dirname(__file__))
 CONFIG_ROOT = os.path.abspath(
-    os.path.join(ROOT_DIRECTORY, "register_target", "configs"))
+    os.path.join(LIB_ROOT, "register_target", "configs"))
+BUILD_CONFIG_ROOT = os.path.join(LIB_ROOT, "build_config")
 
 TEMPLATE_TARGET_NAME = "Skeleton"
-TEMPLATE_BACKENDS_PATH = os.path.join(ROOT_DIRECTORY, "backends")
-EXPERIMENTAL_TARGETS_FILE = "experimental_targets_to_build.ini"
-UPSTREAM_TARGETS_FILE = "official_targets_to_build.ini"
+TEMPLATE_BACKENDS_PATH = os.path.join(LIB_ROOT, "backends")
+
+EXPERIMENTAL_TARGETS_FILE_NAME = "experimental_targets_to_build.ini"
+EXPERIMENTAL_TARGETS_FILE_PATH = os.path.join(
+    BUILD_CONFIG_ROOT, EXPERIMENTAL_TARGETS_FILE_NAME)
+
+OFFICIAL_TARGETS_FILE_NAME = "official_targets_to_build.ini"
+OFFICIAL_TARGETS_FILE_PATH = os.path.join(
+    BUILD_CONFIG_ROOT, OFFICIAL_TARGETS_FILE_NAME)
+
 LLVM_DEFAULT_VERSION = SupportedLLVMVersions.LLVM_19.value
 LLVM_DEFAULT_VERSION_SHORT = LLVM_DEFAULT_VERSION.split(".")[0]
