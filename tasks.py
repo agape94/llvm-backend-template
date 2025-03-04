@@ -98,8 +98,8 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
             "path": "Location on disk where the new environment will be placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
-            "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION.split(".")[0]}. Possible values: 17, 18, 19, 20"})
-def setup_new_environment(c, target_name, path, arch=32, endianness="little", llvm_version=LLVM_DEFAULT_VERSION):
+            "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION_SHORT}. Possible values: 17, 18, 19, 20"})
+def setup_new_environment(c, target_name, path, arch=32, endianness="little", llvm_version=LLVM_DEFAULT_VERSION_SHORT):
   """
     Setup a new LLVM backend development environment for the given target name.
   """
@@ -121,7 +121,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
     raise OSError(f"Something went wrong during archive extraction")
 
   addNewTargetToExistingEnvironment(
-      c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=LLVM_VERSION_ENUM)
+      c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=llvm_version)
 
   copy_file(os.path.join(ROOT_DIRECTORY, "compileTasks.py"),
             os.path.join(environment_path, "tasks.py"))
@@ -141,11 +141,11 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
             "environment_path": "Location on disk where the existing environment is placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
-def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION):
+def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION_SHORT):
   write_file(os.path.join(environment_path,
              EXPERIMENTAL_TARGETS_FILE), target_name)
 
-  TEMPLATE_TARGET_FULL_NAME = TEMPLATE_TARGET_NAME + "-llvm-" + llvm_version.value.split(".")[0]
+  TEMPLATE_TARGET_FULL_NAME = TEMPLATE_TARGET_NAME + "-llvm-" + llvm_version
   
   # copy the template folder to the given location
   template_path = os.path.join(TEMPLATE_BACKENDS_PATH, TEMPLATE_TARGET_FULL_NAME)

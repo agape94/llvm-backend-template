@@ -24,3 +24,4 @@ TEMPLATE_BACKENDS_PATH = os.path.join(ROOT_DIRECTORY, "backends")
 EXPERIMENTAL_TARGETS_FILE = "experimental_targets_to_build.ini"
 UPSTREAM_TARGETS_FILE = "official_targets_to_build.ini"
 LLVM_DEFAULT_VERSION = SupportedLLVMVersions.LLVM_19.value
+LLVM_DEFAULT_VERSION_SHORT = LLVM_DEFAULT_VERSION.split(".")[0]
