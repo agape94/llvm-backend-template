@@ -1,0 +1,203 @@
+modifications:
+  - file_path: llvm/include/llvm/Object/ELFObjectFile.h
+    changes:
+    - type: string
+      content: >2
+            case ELF::EM_<TARGET>:
+              return "elf<bit-width>-<target>";
+      pattern: ELF::ELFCLASS<bit-width>
+      offset: 1
+      relative_location: after
+    - type: string
+      content: >2
+          case ELF::EM_<TARGET>:
+            return Triple::<target>;
+      pattern: return Triple::xtensa;
+      relative_location: after 
+  - file_path: llvm/include/llvm/BinaryFormat/ELF.h
+    changes:
+    - type: string
+      content: >2
+          EM_<TARGET> = 300, // <Target>: <Target> <bit-width>-bit architecture
+      pattern: EM_LOONGARCH = 258
+      relative_location: after
+    - type: string
+      pattern: "#define ELF_RELOC(name, value) name = value,"
+      relative_location: after
+      content: >2  
+        // ELF Relocation type for <Target>.
+        
+        enum {
+          #include "ELFRelocs/<Target>.def"
+        };
+  - file_path: llvm/include/llvm/BinaryFormat/ELFRelocs/<Target>.def
+    changes:
+    - type: new_file
+      content: >2
+        #ifndef ELF_RELOC
+
+        #error "ELF_RELOC must be defined"
+
+        #endif
+
+        // No relocation
+
+        ELF_RELOC(R_<TARGET>_NONE,        0)
+  - file_path: llvm/include/llvm/TargetParser/Triple.h
+    changes:
+    - type: string
+      content: >2
+            <target>, // <Target>: <Target> <bit-width>-bit architecture
+      pattern: LastArchType
+      relative_location: before
+      offset: 1
+    - type: string
+      pattern: isX86
+      relative_location: before
+      offset: -1
+      content: >2
+          // Tests whether the target is <Target>.
+          bool is<Target>() const {
+            return getArch() == Triple::<target>;
+          }
+  - file_path: llvm/lib/BinaryFormat/ELF.cpp
+    changes:
+    - type: string
+      content: >2
+              .Case("<target>", EM_<TARGET>)
+      pattern: .Default(EM_NONE);
+      relative_location: before
+    - type: string
+      content: >2
+          case ELF::EM_<TARGET>:
+            return "<target>";
+      pattern: >2
+        case EM_NONE:
+      relative_location: after
+      offset: 1  
+  - file_path: llvm/lib/Object/ELF.cpp
+    changes:
+    - type: string
+      content: >2
+          case ELF::EM_<TARGET>:
+            switch (Type) {
+        #include "llvm/BinaryFormat/ELFRelocs/<Target>.def"
+            default:
+              break;
+            }
+            break;
+      pattern: >2
+        #include "llvm/BinaryFormat/ELFRelocs/M68k.def"
+      relative_location: before
+      offset: 2
+    - type: string
+      pattern: getELFRelativeRelocationType
+      content: >2
+          case ELF::EM_<TARGET>:
+            break;
+      relative_location: after
+      offset: 1
+  - file_path: llvm/lib/Object/RelocationResolver.cpp
+    changes:
+    - type: string
+      content: >2
+        static bool supports<Target>(uint64_t Type) {
+          return Type == ELF::R_<TARGET>_NONE;
+        }
+
+        static uint64_t resolve<Target>(uint64_t Type, uint64_t Offset, uint64_t S, uint64_t /*LocData*/, int64_t Addend) {
+          if (Type == ELF::R_<TARGET>_NONE)
+            return S + Addend;
+          llvm_unreachable("Invalid relocation type");
+        }
+      pattern: static bool supportsARM(uint64_t Type)
+      relative_location: before
+    - type: string
+      content: >2
+            case Triple::<target>:
+              return {supports<Target>, resolve<Target>};
+      pattern: case Triple::lanai
+      relative_location: before
+  - file_path: llvm/lib/ObjectYAML/ELFYAML.cpp
+    changes:
+    - type: string
+      pattern: ECase(EM_NONE)
+      content: >2
+          ECase(EM_<TARGET>);
+      relative_location: after
+    - type: string
+      pattern: >2
+        #include "llvm/BinaryFormat/ELFRelocs/RISCV.def"
+      content: >2
+          case ELF::EM_<TARGET>:
+        #include "llvm/BinaryFormat/ELFRelocs/<Target>.def"
+            break;
+      relative_location: after
+      offset: 1
+  - file_path: llvm/lib/TargetParser/Triple.cpp
+    changes:
+    - type: string
+      pattern: case UnknownArch
+      content: >2
+          case <target>: return "<target>";
+      relative_location: after
+      offset: 1
+    - type: string
+      content: >2
+          case <target>: return "<target>";
+      pattern: getArchTypePrefix
+      offset: 1
+      relative_location: after
+    - type: string
+      content: >2
+            .Case("<target>", <target>)
+      pattern: .Default(UnknownArch);
+      relative_location: before
+    - type: string
+      content: >2
+                  .Case("<target>", Triple::<target>)
+      pattern: .Default(Triple::UnknownArch);
+      relative_location: before
+    - type: string
+      pattern: switch (T.getArch())
+      content: >2
+          case Triple::<target>:
+            return Triple::ELF;
+      relative_location: after
+    - type: string
+      pattern: case llvm::Triple::UnknownArch
+      content: >2
+          case Triple::<target>:
+            return <bit-width>;
+      relative_location: before
+    - type: string
+      pattern: get32BitArchVariant
+      content: >2
+          case Triple::<target>:
+      correct_bit_width_content: >2
+            break;
+      wrong_bit_width_content: >2
+            T.setArch(Triple::UnknownArch);
+            break;
+      relative_location: after
+      offset: 2
+      bit_width: 32
+    - type: string
+      pattern: get64BitArchVariant
+      content: >2
+          case Triple::<target>:
+      correct_bit_width_content: >2
+            break;
+      wrong_bit_width_content: >2
+            T.setArch(Triple::UnknownArch);
+            break;
+      relative_location: after
+      offset: 2
+      bit_width: 64
+    - type: string
+      pattern: bool Triple::isLittleEndian() const
+      content: >2
+          case Triple::<target>:
+      endianness: little
+      relative_location: after
+      offset: 1
