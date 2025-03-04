@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-03-04
+### Added
+- Added support for LLVM 19 (version 19.1.7).
+	- The files that needed adaptions from LLVM-18.1.8 to LLVM-19.1.7 are listed below:
+		- `Skeleton.h`, `SkeletonISelDAGToDAG.cpp` and `SkeletonTargetMachine.cpp`: The `DAGToDAGISel` class was renamed to `DAGToDAGISelLegacy`, indicating that a new implementation may come in the future.  
+
 ## [1.1.0] - 2025-03-04
 ### Added
 - Added support for LLVM 18 (version 18.1.8).
