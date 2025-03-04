@@ -80,9 +80,9 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
     raise ValueError(
         f"Please provide a valid endianess. Possible values are: 'little' or 'big'")
 
-  if not re.match(r"\d{1,2}\.\d{1,2}(\.\d{1,2})?", llvm_version):
+  if not int(llvm_version) in {17, 18, 19, 20}:
     raise ValueError(
-        "Please provide a valid LLVM version. Supported LLVM versions are 17.x.x")
+        "Please provide a valid major LLVM version. Supported versions are: 17, 18, 19, 20")
 
   repo_name = f"llvm-{target_name.lower()}-backend"
   new_backend_path = os.path.join(path, repo_name)
@@ -98,7 +98,7 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
             "path": "Location on disk where the new environment will be placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'",
-            "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION}. You could use a different version if you want to, however, the template was only tested with 17.0.6, therefore it is not guarateed to work properly with other LLVM versions."})
+            "llvm_version": f"Which LLVM release to use. Default version: {LLVM_DEFAULT_VERSION.split(".")[0]}. Possible values: 17, 18, 19, 20"})
 def setup_new_environment(c, target_name, path, arch=32, endianness="little", llvm_version=LLVM_DEFAULT_VERSION):
   """
     Setup a new LLVM backend development environment for the given target name.
@@ -108,18 +108,20 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   info(
       f"Setting up new LLVM backend development environment for the target `{target_name}`")
 
+  LLVM_VERSION_ENUM = SupportedLLVMVersions.get_llvm_version(llvm_version)
+  
   repo_name = f"llvm-{target_name.lower()}-backend"
   environment_path = os.path.abspath(os.path.join(path, repo_name))
 
   # download LLVM release
   download_and_extract_release(
-      extract_path=path, repo_name=repo_name, llvm_version=llvm_version)
+      extract_path=path, repo_name=repo_name, llvm_version=LLVM_VERSION_ENUM.value)
 
   if not os.path.exists(environment_path) or len(os.listdir(environment_path)) == 0:
     raise OSError(f"Something went wrong during archive extraction")
 
   addNewTargetToExistingEnvironment(
-      c, target_name, environment_path, arch, endianness, new_environment=True)
+      c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=LLVM_VERSION_ENUM)
 
   copy_file(os.path.join(ROOT_DIRECTORY, "compileTasks.py"),
             os.path.join(environment_path, "tasks.py"))
@@ -139,12 +141,14 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
             "environment_path": "Location on disk where the existing environment is placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
-def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False):
+def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION):
   write_file(os.path.join(environment_path,
              EXPERIMENTAL_TARGETS_FILE), target_name)
 
+  TEMPLATE_TARGET_FULL_NAME = TEMPLATE_TARGET_NAME + "-llvm-" + llvm_version.value.split(".")[0]
+  
   # copy the template folder to the given location
-  template_path = os.path.join(ROOT_DIRECTORY, TEMPLATE_TARGET_NAME)
+  template_path = os.path.join(TEMPLATE_BACKENDS_PATH, TEMPLATE_TARGET_FULL_NAME)
   target_folder_path = os.path.join(
       environment_path, "llvm", "lib", "Target", target_name)
   info(
