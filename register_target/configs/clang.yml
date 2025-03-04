@@ -10,7 +10,7 @@ modifications:
     changes:
     - type: string
       content: >2
-        #include "Targets/<Target>.cpp"
+        #include "Targets/<Target>.h"
       pattern: >2
         #include "Targets.h"
       relative_location: after
@@ -25,208 +25,125 @@ modifications:
     changes:
     - type: new_file
       content: >2
-        //===--- <Target>.cpp - Implement <Target> target feature support ---------------===//
-        
+        //===--- <Target>.cpp - Implement <Target> target feature support -------------===//
         //
-        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-        
         // See https://llvm.org/LICENSE.txt for license information.
-        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-        
         //
-        
         //===----------------------------------------------------------------------===//
-        
         //
-        
         // This file implements <Target> TargetInfo objects.
-        
         //
-        
         //===----------------------------------------------------------------------===//
-        
-        #include "<Target>.h"
 
+        #include "<Target>.h"
         #include "clang/Basic/MacroBuilder.h"
 
-        #include "llvm/ADT/StringSwitch.h"
-        
         using namespace clang;
-
         using namespace clang::targets;
-        
+
         const char *const <Target>TargetInfo::GCCRegNames[] = {
-            "r0",  "r1",  "r2",  "r3",  "r4",  "r5",  "r6",  "r7",  "r8",  "r9",  "r10",
-            "r11", "r12", "r13", "r14", "r15", "r16", "r17", "r18", "r19", "r20", "r21",
-            "r22", "r23", "r24", "r25", "r26", "r27", "r28", "r29", "r30", "r31"
+            "r0", "r1", "r2",  "r3",  "r4",  "r5",  "r6",  "r7",
+            "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"
         };
-        
+
         ArrayRef<const char *> <Target>TargetInfo::getGCCRegNames() const {
           return llvm::ArrayRef(GCCRegNames);
         }
-        
-        const TargetInfo::GCCRegAlias <Target>TargetInfo::GCCRegAliases[] = {
-            {{"pc"}, "r2"},   {{"sp"}, "r4"},   {{"fp"}, "r5"},   {{"rv"}, "r8"},
-            {{"rr1"}, "r10"}, {{"rr2"}, "r11"}, {{"rca"}, "r15"},
-        };
-        
-        ArrayRef<TargetInfo::GCCRegAlias> <Target>TargetInfo::getGCCRegAliases() const {
-          return llvm::ArrayRef(GCCRegAliases);
-        }
-        
-        bool <Target>TargetInfo::isValidCPUName(StringRef Name) const {
-          return llvm::StringSwitch<bool>(Name).Case("v11", true).Default(false);
-        }
-        void <Target>TargetInfo::fillValidCPUList(
-            SmallVectorImpl<StringRef> &Values) const {
-          Values.emplace_back("v11");
-        }
-        
-        bool <Target>TargetInfo::setCPU(const std::string &Name) {
-          CPU = llvm::StringSwitch<CPUKind>(Name).Case("v11", CK_V11).Default(CK_NONE);
-        
-          return CPU != CK_NONE;
-        }
-        
-        bool <Target>TargetInfo::hasFeature(StringRef Feature) const {
-          return llvm::StringSwitch<bool>(Feature).Case("<target>", true).Default(false);
-        }
-        
+
         void <Target>TargetInfo::getTargetDefines(const LangOptions &Opts,
-                                               MacroBuilder &Builder) const {
-          // Define __<target>__ when building for target <target>.
-          Builder.defineMacro("__<target>__");
-        
-          // Set define for the CPU specified.
-          switch (CPU) {
-          case CK_V11:
-            Builder.defineMacro("__<TARGET>_V11__");
-            break;
-          case CK_NONE:
-            llvm_unreachable("Unhandled target CPU");
-          }
+                                                MacroBuilder &Builder) const {
+          Builder.defineMacro("PORR");
+          Builder.defineMacro("__PORR__");
+          // FIXME: defines for different 'flavours' of MCU
         }
+
   
   - file_path: clang/lib/Basic/Targets/<Target>.h
     changes:
     - type: new_file
       content: >2
-        //===--- <Target>.h - Declare <Target> target feature support ---------*- C++ -*-===//
-        
+        //===--- <Target>.h - Declare <Target> target feature support -------*- C++ -*-===//
         //
-        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
-        
         // See https://llvm.org/LICENSE.txt for license information.
-        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
-        
         //
-        
         //===----------------------------------------------------------------------===//
-        
         //
-        
         // This file declares <Target> TargetInfo objects.
-        
         //
-        
         //===----------------------------------------------------------------------===//
-        
+
         #ifndef LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
-        
         #define LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
-        
+
         #include "clang/Basic/TargetInfo.h"
-        
         #include "clang/Basic/TargetOptions.h"
-        
         #include "llvm/Support/Compiler.h"
-        
         #include "llvm/TargetParser/Triple.h"
-        
+
         namespace clang {
-        
         namespace targets {
-        
+
         class LLVM_LIBRARY_VISIBILITY <Target>TargetInfo : public TargetInfo {
-          // Class for <Target> (32-bit).
-          // The CPU profiles supported by the <Target> backend
-          enum CPUKind {
-            CK_NONE,
-          } CPU;
-        
-          static const TargetInfo::GCCRegAlias GCCRegAliases[];
           static const char *const GCCRegNames[];
-        
+
         public:
           <Target>TargetInfo(const llvm::Triple &Triple, const TargetOptions &)
               : TargetInfo(Triple) {
-            // Description string has to be kept in sync with backend.
-            // resetDataLayout("E"        // Big endian
-            //                 "-m:e"     // ELF name manging
-            //                 "-p:32:32" // 32 bit pointers, 32 bit aligned
-            //                 "-i64:64"  // 64 bit integers, 64 bit aligned
-            //                 "-a:0:32"  // 32 bit alignment of objects of aggregate type
-            //                 "-n32"     // 32 bit native integer width
-            //                 "-S64"     // 64 bit natural stack alignment
-            //);
-
             // This assert was left intentionally to remind the user to implement the resetDataLayout according to the target
             assert(false && "resetDataLayout function not implemented. Please implement it according to the particularities of your target.");
-        
-            // Setting RegParmMax equal to what mregparm was set to in the old
-            // toolchain
-            RegParmMax = 4;
-        
-            // Set the default CPU
-            CPU = CK_NONE;
-        
-            // Temporary approach to make everything at least word-aligned and allow for
-            // safely casting between pointers with different alignment requirements.
-            // TODO: Remove this when there are no more cast align warnings on the
-            // firmware.
-            MinGlobalAlign = 32;
           }
-        
           void getTargetDefines(const LangOptions &Opts,
                                 MacroBuilder &Builder) const override;
-        
-          bool isValidCPUName(StringRef Name) const override;
-        
-          void fillValidCPUList(SmallVectorImpl<StringRef> &Values) const override;
-        
-          bool setCPU(const std::string &Name) override;
-        
-          bool hasFeature(StringRef Feature) const override;
-        
-          ArrayRef<const char *> getGCCRegNames() const override;
-        
-          ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override;
-        
-          BuiltinVaListKind getBuiltinVaListKind() const override {
-            return TargetInfo::VoidPtrBuiltinVaList;
-          }
-        
+
           ArrayRef<Builtin::Info> getTargetBuiltins() const override {
+            // FIXME: Implement.
             return std::nullopt;
           }
-        
+
+          bool allowsLargerPreferedTypeAlignment() const override { return false; }
+
+          bool hasFeature(StringRef Feature) const override {
+            return Feature == "<TARGET>";
+          }
+
+          ArrayRef<const char *> getGCCRegNames() const override;
+
+          ArrayRef<TargetInfo::GCCRegAlias> getGCCRegAliases() const override {
+            // Make r0 - r3 be recognized by llc (f.e., in clobber list)
+            static const TargetInfo::GCCRegAlias GCCRegAliases[] = {
+                {{"r0"}, "pc"},
+                {{"r1"}, "sp"},
+                {{"r2"}, "sr"},
+                {{"r3"}, "cg"},
+            };
+            return llvm::ArrayRef(GCCRegAliases);
+          }
+
           bool validateAsmConstraint(const char *&Name,
-                                      TargetInfo::ConstraintInfo &info) const override {
+                                    TargetInfo::ConstraintInfo &info) const override {
+            // Implement
             return false;
           }
-        
-          std::string_view getClobbers() const override { return ""; }
-        
-          bool hasBitIntType() const override { return true; }
+
+          std::string_view getClobbers() const override {
+            // FIXME: Implement
+            return "";
+          }
+
+          BuiltinVaListKind getBuiltinVaListKind() const override {
+            // FIXME: implement
+            return TargetInfo::CharPtrBuiltinVaList;
+          }
         };
+
         } // namespace targets
         } // namespace clang
-        
         #endif // LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
+
     
   - file_path: clang/lib/CodeGen/CMakeLists.txt
     changes: 
@@ -416,10 +333,14 @@ modifications:
         
         namespace {
         class <Target>TargetCodeGenInfo : public TargetCodeGenInfo {
+        
         public:
+          
           <Target>TargetCodeGenInfo(CodeGen::CodeGenTypes &CGT)
               : TargetCodeGenInfo(std::make_unique<<Target>ABIInfo>(CGT)) {}
+        
         };
+        
         }
         
         std::unique_ptr<TargetCodeGenInfo>
