@@ -48,7 +48,7 @@ def build_target(c, official_targets="", experimental_targets="", debug=False, l
   if experimental_targets == "" and official_targets == "":
     raise ValueError("Please provide at least one target to build.")
 
-  ENV_ROOT = os.abspath(os.path.dirname(__file__))
+  ENV_ROOT = os.path.abspath(os.path.dirname(__file__))
   build_type = "Debug" if debug else "Release"
   build_dir_name = f'build_{build_type.lower()}'
   build_dir = os.path.join(ENV_ROOT, build_dir_name)
