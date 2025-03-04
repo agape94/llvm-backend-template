@@ -69,7 +69,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   copy_file(EXPERIMENTAL_TARGETS_FILE_PATH, os.path.join(
       environment_path, EXPERIMENTAL_TARGETS_FILE_NAME))
 
-  addNewTargetToExistingEnvironment(
+  create_target_in_environment(
       c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=llvm_version)
 
   copy_file(os.path.join(LIB_ROOT, "tasks", "compileTasks.py.in"),
@@ -87,13 +87,15 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
 # ==================================================================================================================
 
 
-@task(aliases=['nte'],
+@task(aliases=['ct'],
       help={"target_name": "The name of the Target. It should be capitalized and camelcase. Ex: TriCore, ARM, Mips",
             "environment_path": "Location on disk where the existing environment is placed",
             "arch": "Bit width of the new target. Default value: 32. Possible values: 8, 16, 32 or 64",
             "endianness": "Whether the new target is little-endian of big-endian. Default value: little. Possible values: 'little' or 'big'"})
-def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION_SHORT):
-
+def create_target_in_environment(c, target_name, environment_path, arch=32, endianness="little", new_environment=False, llvm_version=LLVM_DEFAULT_VERSION_SHORT):
+  """
+    Add a new target to an existing LLVM backend development environment.
+  """
   check_arguments(target_name, environment_path,
                   arch, endianness, llvm_version)
   write_file(os.path.join(environment_path,
