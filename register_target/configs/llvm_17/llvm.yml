@@ -178,6 +178,7 @@ modifications:
             break;
       wrong_bit_width_content: >2
             T.setArch(Triple::UnknownArch);
+            break;
       relative_location: after
       offset: 2
       bit_width: 32
@@ -189,6 +190,7 @@ modifications:
             break;
       wrong_bit_width_content: >2
             T.setArch(Triple::UnknownArch);
+            break;
       relative_location: after
       offset: 2
       bit_width: 64
