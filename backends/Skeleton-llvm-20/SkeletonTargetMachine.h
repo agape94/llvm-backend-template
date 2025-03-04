@@ -17,12 +17,11 @@
 #include "SkeletonInstrInfo.h"
 #include "SkeletonSelectionDAGInfo.h"
 #include "SkeletonSubtarget.h"
-#include "llvm/Target/TargetMachine.h"
 #include <optional>
 
 namespace llvm {
 
-class SkeletonTargetMachine : public LLVMTargetMachine {
+class SkeletonTargetMachine : public CodeGenTargetMachineImpl {
   SkeletonSubtarget Subtarget;
   std::unique_ptr<TargetLoweringObjectFile> TLOF;
   

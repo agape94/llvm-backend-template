@@ -44,12 +44,12 @@ class SkeletonAsmParser : public MCTargetAsmParser {
   ParseStatus tryParseRegister(MCRegister &RegNo, SMLoc &StartLoc,
                                         SMLoc &EndLoc) override;
 
-  bool ParseInstruction(ParseInstructionInfo &Info, StringRef Name,
+  bool parseInstruction(ParseInstructionInfo &Info, StringRef Name,
                         SMLoc NameLoc, OperandVector &Operands) override;
 
   bool ParseDirective(AsmToken DirectiveID) override;
 
-  bool MatchAndEmitInstruction(SMLoc IdLoc, unsigned &Opcode,
+  bool matchAndEmitInstruction(SMLoc IdLoc, unsigned &Opcode,
                                OperandVector &Operands, MCStreamer &Out,
                                uint64_t &ErrorInfo,
                                bool MatchingInlineAsm) override;
@@ -253,7 +253,7 @@ ParseStatus SkeletonAsmParser::tryParseRegister(MCRegister &RegNum,
   return MatchOperand_Success;
 }
 
-bool SkeletonAsmParser::ParseInstruction(ParseInstructionInfo & /*Info*/,
+bool SkeletonAsmParser::parseInstruction(ParseInstructionInfo & /*Info*/,
                                       StringRef Name, SMLoc NameLoc,
                                       OperandVector &Operands) {
   return false;
@@ -263,7 +263,7 @@ bool SkeletonAsmParser::ParseDirective(AsmToken DirectiveID) {
   return false;
 }
 
-bool SkeletonAsmParser::MatchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
+bool SkeletonAsmParser::matchAndEmitInstruction(SMLoc IDLoc, unsigned &Opcode,
                                        OperandVector &Operands, MCStreamer &Out,
                                        uint64_t &ErrorInfo,
                                        bool MatchingInlineAsm)

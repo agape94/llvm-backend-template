@@ -38,3 +38,7 @@ void SkeletonFrameLowering::emitEpilogue(MachineFunction & /*MF*/,
 
 void SkeletonFrameLowering::determineCalleeSaves(MachineFunction &MF, BitVector &SavedRegs, RegScavenger *RS) const {}
 
+bool SkeletonFrameLowering::hasFPImpl(const MachineFunction &MF) const 
+{
+  return true;
+}

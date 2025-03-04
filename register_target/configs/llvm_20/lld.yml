@@ -27,7 +27,7 @@ modifications:
           
           class <Target> final : public TargetInfo {
           public:
-            <Target>();
+            <Target>(Ctx &ctx);
             RelExpr getRelExpr(RelType type, const Symbol &s,
                                const uint8_t *loc) const override;
             void relocate(uint8_t *loc, const Relocation &rel,
@@ -36,10 +36,7 @@ modifications:
           
           } // namespace
           
-          <Target>::<Target>() {
-            // mov.b #0, r3
-            trapInstr = {0x43, 0x43, 0x43, 0x43};
-          }
+          <Target>::<Target>(Ctx &ctx) : TargetInfo(ctx) {}
           
           RelExpr <Target>::getRelExpr(RelType type, const Symbol &s,
                                      const uint8_t *loc) const {
@@ -93,7 +90,7 @@ modifications:
       - type: string
         content: >2
             case EM_<TARGET>:
-              return set<Target>TargetInfo();
+              return set<Target>TargetInfo(ctx);
         pattern: switch (ctx.arg.emachine)
         relative_location: after
   
