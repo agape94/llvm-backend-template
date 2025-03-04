@@ -52,10 +52,7 @@ modifications:
           
           void <Target>::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {}
           
-          TargetInfo *elf::get<Target>TargetInfo() {
-            static <Target> target;
-            return &target;
-          }
+          void elf::set<Target>TargetInfo(Ctx &ctx) { ctx.target.reset(new <Target>(ctx)); }
   - file_path: lld/ELF/CMakeLists.txt
     changes:
       - type: string
@@ -96,15 +93,15 @@ modifications:
       - type: string
         content: >2
             case EM_<TARGET>:
-              return get<Target>TargetInfo();
-        pattern: switch (config->emachine)
+              return set<Target>TargetInfo();
+        pattern: switch (ctx.arg.emachine)
         relative_location: after
   
   - file_path: lld/ELF/Target.h
     changes:
       - type: string
         content: >2
-          TargetInfo *get<Target>TargetInfo();
-        pattern: TargetInfo *getMSP430TargetInfo()
+          void set<Target>TargetInfo(Ctx &);
+        pattern: void setMSP430TargetInfo(Ctx &);
         relative_location: after
   
