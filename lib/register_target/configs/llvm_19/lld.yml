@@ -1,0 +1,110 @@
+modifications:
+  - file_path: lld/ELF/Arch/<Target>.cpp
+    changes:
+      - type: new_file
+        content: |
+          //===- <Target>.cpp ---------------------------------------------------------===//
+          //
+          // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+          // See https://llvm.org/LICENSE.txt for license information.
+          // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+          //
+          //===----------------------------------------------------------------------===//
+          
+          #include "Symbols.h"
+          #include "Target.h"
+          #include "lld/Common/ErrorHandler.h"
+          #include "llvm/BinaryFormat/ELF.h"
+          #include "llvm/Support/Endian.h"
+          using namespace llvm;
+          using namespace llvm::object;
+          using namespace llvm::support::endian;
+          using namespace llvm::ELF;
+          using namespace lld;
+          using namespace lld::elf;
+          
+          namespace {
+          
+          class <Target> final : public TargetInfo {
+          public:
+            <Target>();
+            RelExpr getRelExpr(RelType type, const Symbol &s,
+                               const uint8_t *loc) const override;
+            void relocate(uint8_t *loc, const Relocation &rel,
+                          uint64_t val) const override;
+          };
+          
+          } // namespace
+          
+          <Target>::<Target>() {
+            // mov.b #0, r3
+            trapInstr = {0x43, 0x43, 0x43, 0x43};
+          }
+          
+          RelExpr <Target>::getRelExpr(RelType type, const Symbol &s,
+                                     const uint8_t *loc) const {
+            // TODO: Implement this according to the target specification.
+            switch (type) {
+            default:
+              return R_ABS;
+            }
+          }
+          
+          void <Target>::relocate(uint8_t *loc, const Relocation &rel, uint64_t val) const {}
+          
+          TargetInfo *elf::get<Target>TargetInfo() {
+            static <Target> target;
+            return &target;
+          }
+  - file_path: lld/ELF/CMakeLists.txt
+    changes:
+      - type: string
+        content: >2
+            Arch/<Target>.cpp
+        pattern: Arch/X86.cpp
+        relative_location: before
+  
+  - file_path: lld/ELF/Driver.cpp
+    changes:
+      - type: string
+        content: >2
+                    .Case("<target>elf", {ELF<bit-width>LEKind, EM_<TARGET>})
+        pattern: .Default({ELFNoneKind, EM_NONE});
+        min_bit_width: 32
+        relative_location: before
+  
+  - file_path: lld/ELF/InputFiles.cpp
+    changes:
+      - type: string
+        content: >2
+            case Triple::<target>:
+              return EM_<TARGET>;
+        pattern: switch (t.getArch())
+        relative_location: after
+  
+  - file_path: lld/ELF/ScriptParser.cpp
+    changes:
+      - type: string
+        content: >2
+                .Case("elf<bit-width>-<target>", {ELF<bit-width>LEKind, EM_<TARGET>})
+        pattern: .Default({ELFNoneKind, EM_NONE});
+        min_bit_width: 32
+        relative_location: before
+  
+  - file_path: lld/ELF/Target.cpp
+    changes:
+      - type: string
+        content: >2
+            case EM_<TARGET>:
+              return get<Target>TargetInfo();
+        pattern: switch (config->emachine)
+        relative_location: after
+  
+  - file_path: lld/ELF/Target.h
+    changes:
+      - type: string
+        content: >2
+          TargetInfo *get<Target>TargetInfo();
+        pattern: TargetInfo *getMSP430TargetInfo()
+        relative_location: after
+  
