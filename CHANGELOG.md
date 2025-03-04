@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-03-04
+### Removed
+- The folder `register_targets` was moved inside the `lib` and was left by mistake
+
 ## [1.3.0] - 2025-03-04
 ### Added
 - Added support for LLVM 20 (version 20.1.0-rc3). At the time of writing, LLVM-20.1.0 was not released yet. The template will be updated in the future if needed. 
