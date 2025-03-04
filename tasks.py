@@ -162,7 +162,7 @@ def addNewTargetToExistingEnvironment(c, target_name, environment_path, arch=32,
     search_replace_in_directory(
         target_folder_path, target_name, search_string=TEMPLATE_TARGET_NAME)
 
-  addTarget(target_name, arch, endianness, environment_path)
+  addTarget(target_name, arch, endianness, environment_path, llvm_version)
 
   if not new_environment:
     info(

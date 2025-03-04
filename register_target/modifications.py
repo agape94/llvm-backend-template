@@ -5,7 +5,7 @@ import platform
 from pathlib import PureWindowsPath
 from utils import *
 import os
-
+from variables import *
 
 class PROJECT(Enum):
   LLVM = "llvm.yml"
@@ -13,7 +13,7 @@ class PROJECT(Enum):
   LLD = "lld.yml"
 
 
-def applyModifications(config_file, environment_path, target_name, bit_width, endianness):
+def applyModifications(config_file, environment_path, target_name, bit_width, endianness, llvm_version=LLVM_DEFAULT_VERSION_SHORT):
   message = f"Adding target \"{target_name}\" to"
 
   if config_file == PROJECT.LLVM:
@@ -26,7 +26,7 @@ def applyModifications(config_file, environment_path, target_name, bit_width, en
   info(message)
 
   modifications = readModifications(
-      os.path.join(CONFIG_ROOT, config_file.value))
+      os.path.join(CONFIG_ROOT, f"llvm_{llvm_version}", config_file.value))
 
   for mod in modifications:
     mod.apply(environment_path, target_name, bit_width, endianness)
