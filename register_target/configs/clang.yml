@@ -26,21 +26,33 @@ modifications:
     - type: new_file
       content: >2
         //===--- <Target>.cpp - Implement <Target> target feature support -------------===//
+        
         //
+        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+        
         // See https://llvm.org/LICENSE.txt for license information.
+        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+        
         //
+        
         //===----------------------------------------------------------------------===//
+        
         //
+        
         // This file implements <Target> TargetInfo objects.
+        
         //
+        
         //===----------------------------------------------------------------------===//
 
         #include "<Target>.h"
+        
         #include "clang/Basic/MacroBuilder.h"
 
         using namespace clang;
+        
         using namespace clang::targets;
 
         const char *const <Target>TargetInfo::GCCRegNames[] = {
@@ -65,26 +77,41 @@ modifications:
     - type: new_file
       content: >2
         //===--- <Target>.h - Declare <Target> target feature support -------*- C++ -*-===//
+        
         //
+        
         // Part of the LLVM Project, under the Apache License v2.0 with LLVM Exceptions.
+        
         // See https://llvm.org/LICENSE.txt for license information.
+        
         // SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
+        
         //
+        
         //===----------------------------------------------------------------------===//
+        
         //
+        
         // This file declares <Target> TargetInfo objects.
+        
         //
+        
         //===----------------------------------------------------------------------===//
 
         #ifndef LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
+        
         #define LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
 
         #include "clang/Basic/TargetInfo.h"
+        
         #include "clang/Basic/TargetOptions.h"
+        
         #include "llvm/Support/Compiler.h"
+        
         #include "llvm/TargetParser/Triple.h"
 
         namespace clang {
+        
         namespace targets {
 
         class LLVM_LIBRARY_VISIBILITY <Target>TargetInfo : public TargetInfo {
@@ -138,10 +165,13 @@ modifications:
             // FIXME: implement
             return TargetInfo::CharPtrBuiltinVaList;
           }
+        
         };
 
         } // namespace targets
+        
         } // namespace clang
+        
         #endif // LLVM_CLANG_LIB_BASIC_TARGETS_<TARGET>_H
 
     
