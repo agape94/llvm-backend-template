@@ -40,7 +40,7 @@ SkeletonSubtarget::SkeletonSubtarget(const Triple &TargetTriple, StringRef Cpu,
                                StringRef FeatureString, const TargetMachine &TM,
                                const TargetOptions & /*Options*/,
                                CodeModel::Model /*CodeModel*/,
-                               CodeGenOpt::Level /*OptLevel*/)
+                               CodeGenOptLevel /*OptLevel*/)
     : SkeletonGenSubtargetInfo(TargetTriple, Cpu, /*TuneCPU*/ Cpu, FeatureString),
       FrameLowering(initializeSubtargetDependencies(Cpu, FeatureString)),
       TLInfo(TM, *this) {}

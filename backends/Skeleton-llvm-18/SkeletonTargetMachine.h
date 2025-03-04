@@ -37,7 +37,7 @@ public:
                      const TargetOptions &Options,
                      std::optional<Reloc::Model> RM,
                      std::optional<CodeModel::Model> CodeModel,
-                     CodeGenOpt::Level OptLevel, bool JIT);
+                     CodeGenOptLevel OptLevel, bool JIT);
 
   const SkeletonSubtarget *
   getSubtargetImpl(const llvm::Function & /*Fn*/) const override {

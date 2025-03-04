@@ -41,7 +41,7 @@ class SkeletonAsmParser : public MCTargetAsmParser {
   bool parseRegister(MCRegister &RegNum, SMLoc &StartLoc,
                      SMLoc &EndLoc) override;
 
-  OperandMatchResultTy tryParseRegister(MCRegister &RegNo, SMLoc &StartLoc,
+  ParseStatus tryParseRegister(MCRegister &RegNo, SMLoc &StartLoc,
                                         SMLoc &EndLoc) override;
 
   bool ParseInstruction(ParseInstructionInfo &Info, StringRef Name,
@@ -247,7 +247,7 @@ bool SkeletonAsmParser::parseRegister(MCRegister &RegNum, SMLoc &StartLoc,
   return MatchRegisterName(Lexer.getTok().getIdentifier()) == SKELETON::R0;
 }
 
-OperandMatchResultTy SkeletonAsmParser::tryParseRegister(MCRegister &RegNum,
+ParseStatus SkeletonAsmParser::tryParseRegister(MCRegister &RegNum,
                                                       SMLoc &StartLoc,
                                                       SMLoc &EndLoc) {
   return MatchOperand_Success;

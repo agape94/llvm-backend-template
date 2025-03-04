@@ -24,8 +24,7 @@ public:
 protected:
   unsigned getRelocType(MCContext &Ctx, const MCValue &Target,
                         const MCFixup &Fixup, bool IsPCRel) const override;
-  bool needsRelocateWithSymbol(const MCSymbol &SD,
-                               unsigned Type) const override;
+  bool needsRelocateWithSymbol(const MCValue &Val, const MCSymbol &Sym, unsigned Type) const override;
 };
 
 } // end anonymous namespace
@@ -41,8 +40,8 @@ unsigned SkeletonELFObjectWriter::getRelocType(MCContext & /*Ctx*/,
   return 0;
 }
 
-bool SkeletonELFObjectWriter::needsRelocateWithSymbol(const MCSymbol & /*SD*/,
-                                                   unsigned Type) const {
+bool needsRelocateWithSymbol(const MCValue &Val, const MCSymbol &Sym, unsigned Type) 
+{
   return false;
 }
 
