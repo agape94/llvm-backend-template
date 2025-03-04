@@ -7,6 +7,7 @@ class SupportedLLVMVersions(Enum):
   LLVM_17 = "17.0.6"
   LLVM_18 = "18.1.8"
   LLVM_19 = "19.1.7"
+  LLVM_20 = "20.1.0-rc3"
 
   def get_llvm_version(version_number):
     version_str = f"LLVM_{version_number}"
