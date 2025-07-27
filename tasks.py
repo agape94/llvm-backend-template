@@ -72,16 +72,29 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   create_target_in_environment(
       c, target_name, environment_path, arch, endianness, new_environment=True, llvm_version=llvm_version)
 
-  copy_file(os.path.join(LIB_ROOT, "tasks", "compileTasks.py.in"),
+  copy_file(os.path.join(LIB_ROOT, "tasks", "environmentTasks.py.in"),
             os.path.join(environment_path, "tasks.py"))
 
   search_replace_in_file(os.path.join(environment_path, "tasks.py"),
                          "<EXPERIMENTAL_TARGETS_FILE_NAME>", EXPERIMENTAL_TARGETS_FILE_NAME)
   search_replace_in_file(os.path.join(environment_path, "tasks.py"),
                          "<OFFICIAL_TARGETS_FILE_NAME>", OFFICIAL_TARGETS_FILE_NAME)
+  
+  copy_file(os.path.join(LIB_ROOT, "vscode-workspace", "llvm-<target>-backend.code-workspace"),
+            os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"))
+  
+  search_replace_in_file(os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"),
+                         "<target>", target_name.lower())
+  search_replace_in_file(os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"),
+                         "<Target>", target_name)
+  search_replace_in_file(os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"),
+                         "<TARGET>", target_name.upper())
 
-  copy_file(OFFICIAL_TARGETS_FILE_PATH, os.path.join(
-      environment_path, OFFICIAL_TARGETS_FILE_NAME))
+  copy_file(OFFICIAL_TARGETS_FILE_PATH, os.path.join(environment_path, OFFICIAL_TARGETS_FILE_NAME))
+  
+  copy_directory_recursively(src=os.path.join(LIB_ROOT, "tests"), dst=os.path.join(environment_path, "tests"))
+
+  info(f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
 
 
 # ==================================================================================================================
@@ -124,6 +137,4 @@ def create_target_in_environment(c, target_name, environment_path, arch=32, endi
   if not new_environment:
     info(
         f"Successfully added new target {target_name} to existing environment at {environment_path}")
-  else:
-    info(
-        f"Successfully created new LLVM Backend Development environment for target {target_name} at {environment_path}")
+    

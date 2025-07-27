@@ -1,0 +1,250 @@
+from invoke import task
+import os
+import multiprocessing
+import subprocess
+from datetime import datetime
+import glob
+import re
+import shlex
+from pathlib import Path
+import shutil
+
+
+# ==================================================================================================================
+
+EXPERIMENTAL_TARGETS_FILE_NAME = "<EXPERIMENTAL_TARGETS_FILE_NAME>"
+OFFICIAL_TARGETS_FILE_NAME = "<OFFICIAL_TARGETS_FILE_NAME>"
+
+# ==================================================================================================================
+
+
+def info(msg):
+  print(f"INFO: {msg}")
+
+
+def error(msg):
+  print(f"ERROR: {msg}")
+
+# ==================================================================================================================
+
+
+@task(aliases=['b'],
+      help={"official_targets": "List of official targets to build, Strings separated by ';' (semicolon). By default it is None. Example: Lanai;ARM;RISCV;etc. If not defined, the targets are read from the 'official_targets_to_build.ini' file",
+            "experimental_targets": "List of experimental targets to build, Strings separated by ';' (semicolon). Example: 'TriCore;RISCW;etc'. If not defined, the targets are read from the 'experimental_targets_to_build.ini' file",
+            "debug": "Build Debug version of the target. Default value: False",
+            "llc_only": "Whether to only build llc or not. Default value: False",
+            "parallel_link_jobs": "Number of parallel link jobs. By default it is set to 2. Note: A high number of link jobs may cause your system to run out of memory and crash."})
+def build_target(c, official_targets="", experimental_targets="", debug=False, llc_only=False, parallel_link_jobs=2):
+  """
+    Starts the build process for the compiler. By default, the build type is set to Release.
+  """
+  # Check if there are any targets to build defined in the .*_targets_to_build files if the respective parameters are not provided
+  # This is useful because the user may want to build multiple targets and it is easier to define them in a file than to provide them as a parameter
+  if experimental_targets == "":
+    with open(EXPERIMENTAL_TARGETS_FILE_NAME, "r") as f:
+      experimental_targets = ";".join(
+          [line.strip() for line in f if not line.strip().startswith("#")])
+
+  if official_targets == "":
+    with open(OFFICIAL_TARGETS_FILE_NAME, "r") as f:
+      official_targets = ";".join(
+          [line.strip() for line in f if not line.strip().startswith("#")])
+
+  if experimental_targets == "" and official_targets == "":
+    raise ValueError("Please provide at least one target to build.")
+
+  ENV_ROOT = os.path.abspath(os.path.dirname(__file__))
+  build_type = "Debug" if debug else "Release"
+  build_dir_name = f'build_{build_type.lower()}'
+  build_dir = os.path.join(ENV_ROOT, build_dir_name)
+
+  if not os.path.exists(f'{build_dir}'):
+    os.mkdir(f'{build_dir}')
+
+  os.chdir(ENV_ROOT)
+  enable_clang_lld = "-DLLVM_ENABLE_PROJECTS=\"clang;lld\"" if not llc_only else ""
+  enable_assertions = "-DLLVM_ENABLE_ASSERTIONS=ON" if build_type == "Debug" else "-DLLVM_ENABLE_ASSERTIONS=OFF"
+  cmake_command = f'cmake -S llvm -B {build_dir} -G Ninja {enable_clang_lld} -DCMAKE_INSTALL_PREFIX={build_dir} {enable_assertions} -DCMAKE_BUILD_TYPE={build_type} -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="{experimental_targets}" -DLLVM_TARGETS_TO_BUILD="{official_targets}" -DLLVM_PARALLEL_LINK_JOBS={parallel_link_jobs} -DLLVM_USE_LINKER=lld'
+
+  info(f"Configuring {experimental_targets} ... ")
+  info(f"Cmake command: {cmake_command}")
+
+  process = subprocess.Popen(cmake_command, shell=True)
+  # Wait for the subprocess to complete
+  process.wait()
+
+  # Check if the command was successful (return code 0)
+  if process.returncode == 0:
+    info("Configured succesfully.")
+  else:
+    raise Exception("Configure step failed.")
+
+  os.chdir(build_dir)
+
+  cores = multiprocessing.cpu_count()
+  build_command = f'ninja -j {cores - 1}'
+
+  info(f"Build command: {build_command}")
+  info(f"Building target {experimental_targets} ...")
+  process = subprocess.Popen(build_command, shell=True)
+  # Wait for the subprocess to complete
+  process.wait()
+
+  # Check if the command was successful (return code 0)
+  if process.returncode == 0:
+    info("Built succesfully!")
+  else:
+    raise Exception("The build has failed.")
+
+  os.chdir(ENV_ROOT)
+
+@task(aliases = ['t'],
+    help={"vscode_build": "Whether to use the binaries from the vscode build folder or not. Default value: False",
+          "filter": "Glob pattern to filter the C files to be compiled. Example: 'test_*' will compile only the files that start with 'test_'",
+          "debug": "Whether to compile the C files in debug mode or not. Default value: True",
+          "c_to_llvmir": "Whether to compile the C files to LLVM IR or not. Default value: False",
+          "c_to_assembly": "Whether to compile the C files to assembly or not. Default value: False",
+          "llvmir_to_assembly": "Whether to compile the LLVM IR files to assembly or not. Default value: False",
+          "optimization_level": "Optimization level for the compilation. Default value: 1",
+          "list_tests": "Whether to list the tests or not. This parameter will stop the test run after printing the tests. Default value: False"
+    })
+def run_c_sample_tests(c, vscode_build=False, filter="", debug=False, c_to_assembly=False, c_to_llvmir=True, llvmir_to_assembly=True, optimization_level=0, list_tests=False):
+  """
+    Compiles all C programs found in the `tests/c-patterns` directory and keeps the outputs in the `tests/c-patterns/bin` directory.
+    This task uses pytest to run the tests, so that we will have a better overview of the results.
+  """
+  class MockCompletedProcess:
+    def __init__(self, returncode=0):
+        self.returncode = returncode
+        self.stderr = b''
+  
+  info("Running tests ...") if not list_tests else info("Listing tests ...")
+  build_type = "debug" if debug else "release"
+  
+  # define relevant paths for this test
+  c_files_path = os.path.join(os.path.dirname(__file__), "tests/src/")
+  test_output_path = os.path.join(os.path.dirname(__file__), "tests/test-output/")
+  assembly_files_path = os.path.join(test_output_path, "assembly")
+  llvmir_files_path = os.path.join(test_output_path, "llvmir")
+  log_files_path = os.path.join(test_output_path, "logs")
+
+  # get target name
+  with open(EXPERIMENTAL_TARGETS_FILE_NAME, "r") as f:
+    for line in f:
+      if not line.strip().startswith("#") and line.strip() != "":
+        # we assume that the first non-comment line contains the target name
+        target_name = line.strip()
+        break
+
+  if not list_tests:
+    # cleanup from previous test run
+    if os.path.exists(test_output_path):
+      shutil.rmtree(test_output_path)
+    
+    # create test output folders
+    os.mkdir(test_output_path)
+    os.mkdir(assembly_files_path)
+    os.mkdir(llvmir_files_path)
+    os.mkdir(log_files_path)
+
+  # Get a list of files with the .c extension from the c_files_path
+  # Check if the filter already includes the .s extension
+  if filter.endswith(".c"):
+      file_pattern = os.path.join(c_files_path, filter)
+  else:
+      file_pattern = os.path.join(c_files_path, f"{filter}*.c" if filter != "" else "*.c")
+  
+  c_files = [os.path.basename(x) for x in glob.glob(file_pattern)]
+  file_names = [Path(x).stem for x in c_files]
+
+  # initialize statistical data
+  passed = 0
+  failed = 0
+  total = len(file_names)
+
+  run_clang = False
+  run_llc = False
+  
+  if c_to_assembly:
+    clang_arguments = f"-S --target={target_name.lower()} {' --debug' if debug else ''} {f' -O{optimization_level}' if optimization_level > 0 else ''}"
+    run_clang = True
+  elif c_to_llvmir: 
+    clang_arguments = f"-S --target={target_name.lower()} {' --debug' if debug else ''} -emit-llvm {f' -O{optimization_level}' if optimization_level > 0 else ''}"
+    run_clang = True
+
+  if llvmir_to_assembly:
+    llc_arguments = f"--march={target_name.lower()} {' --debug' if debug else ''} -print-after-all {f' -O{optimization_level}' if optimization_level > 0 else ''}"
+    run_llc = True
+
+  build_dir = os.path.join(os.path.dirname(__file__), f"build_{target_name.lower()}_{build_type}") if not vscode_build else "build_vscode"
+
+  clang_path = os.path.join(os.path.dirname(__file__), f"{build_dir}/bin/clang")
+  llc_path = os.path.join(os.path.dirname(__file__), f"{build_dir}/bin/llc")
+
+  index = 1
+  # iterate over the c_files list
+  for c_file in file_names:
+      if list_tests:
+        print(f"- {index:2}/{total}: {c_file}.c")
+        index += 1
+        continue
+
+      print(f"{index:2}/{total}: {c_file}.c {'.' * (40 - len(c_file) - 1)}", end="")
+      if c_to_assembly:
+        clang_command = f"{clang_path} {clang_arguments} {os.path.join(c_files_path, f'{c_file}.c')} -o {os.path.join(assembly_files_path, f'{c_file}.s')}"
+      elif c_to_llvmir:
+        clang_command = f"{clang_path} {clang_arguments} {os.path.join(c_files_path, f'{c_file}.c')} -o {os.path.join(llvmir_files_path, f'{c_file}.ll')}"
+      
+      if llvmir_to_assembly:
+        llc_command = f"{llc_path} {llc_arguments} {os.path.join(llvmir_files_path, f'{c_file}.ll')} -o {os.path.join(assembly_files_path, f'{c_file}.s')}"
+
+      result_clang = MockCompletedProcess()
+      result_llc = MockCompletedProcess()
+      
+      if run_clang:
+        result_clang = subprocess.run(shlex.split(clang_command), env=os.environ, capture_output=True)
+      if run_llc:
+        result_llc = subprocess.run(shlex.split(llc_command), env=os.environ, capture_output=True)
+
+      if result_clang.returncode != 0 or result_llc.returncode != 0:
+        with open(os.path.join(log_files_path, f"{c_file}.log"), "w") as f:
+          if run_clang:
+            f.write(">>>>>>>>>>>>> CLANG ERROR OUTPUT\n")
+            f.write(result_clang.stderr.decode())
+          if run_llc:
+            f.write("\n>>>>>>>>>>>>> LLC ERROR OUTPUT\n")
+            f.write(result_llc.stderr.decode())
+        failed += 1
+        print(" Failed")
+      else:
+        passed += 1
+        print(" Passed")
+      
+      index += 1
+
+  if not list_tests:
+    info(f"Passed: {passed}/{total} - {round(passed/total*100)}%")
+    info(f"Failed: {failed}/{total} - {round(failed/total*100)}%")
+  
+
+@task(aliases=['c'])
+def code(c):
+  """ 
+  Open VSCode workspace for this environment.
+  """
+  ENV_ROOT = os.path.abspath(os.path.dirname(__file__))
+
+  found_workspace_file = False
+  for file in os.listdir(ENV_ROOT):
+    if file.endswith('.code-workspace'):
+        workspace_file = file
+        found_workspace_file = True
+        break
+
+  if found_workspace_file:
+    workspace = os.path.join(ENV_ROOT, workspace_file)
+  else:
+    workspace_file = ENV_ROOT
+
+  # Open VS Code with the workspace file, detached
+  subprocess.Popen(['code', workspace], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
