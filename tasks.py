@@ -80,7 +80,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   search_replace_in_file(os.path.join(environment_path, "tasks.py"),
                          "<OFFICIAL_TARGETS_FILE_NAME>", OFFICIAL_TARGETS_FILE_NAME)
   
-  copy_file(os.path.join(LIB_ROOT, "vscode-workspace", "llvm-<target>-backend.code-workspace"),
+  copy_file(os.path.join(LIB_ROOT, "vscode-workspace", "llvm-target-backend.code-workspace"),
             os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"))
   
   search_replace_in_file(os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"),
