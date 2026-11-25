@@ -104,6 +104,6 @@ def copy_file(src, dst):
 
 
 def write_file(path, content):
-  with open(path, "a") as f:
+  with open(path, "a", encoding="utf-8") as f:
     f.write("\n")
     f.write(content)
