@@ -1,4 +1,5 @@
 import os
+import time
 import shutil
 import zipfile
 import wget
@@ -87,7 +88,14 @@ def download_and_extract_release(extract_path, repo_name, llvm_version, cleanup=
   env_folder_path = os.path.join(extract_path, repo_name)
   info(f"Renaming folder to {repo_name} ...")
 
-  os.rename(extract_folder_path, env_folder_path)
+  for attempt in range(10):
+    try:
+      os.rename(extract_folder_path, env_folder_path)
+      break
+    except PermissionError:
+      if attempt == 9:
+        raise
+      time.sleep(0.5)
 
 # ==================================================================================================================
 
@@ -104,6 +112,6 @@ def copy_file(src, dst):
 
 
 def write_file(path, content):
-  with open(path, "a") as f:
+  with open(path, "a", encoding="utf-8") as f:
     f.write("\n")
     f.write(content)

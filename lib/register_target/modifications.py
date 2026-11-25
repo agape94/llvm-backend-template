@@ -34,7 +34,7 @@ def applyModifications(config_file, environment_path, target_name, bit_width, en
 
 
 def readModifications(file_path):
-  with open(file_path, "r") as file:
+  with open(file_path, "r", encoding="utf-8") as file:
     mods = yaml.safe_load(file)["modifications"]
 
   modifications = []
@@ -167,7 +167,7 @@ class Change:
   def _addNewFile(self, file_path: str, target_name: str, bit_width: int, endianness: str):
     assert self.content is not None
 
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
       f.write(self.content)
 
   def _addString(self, file_path: str, target_name: str, bit_width: int, endianness: str):
@@ -175,7 +175,7 @@ class Change:
     assert self.relative_location is not RelativeLocation.UNKNOWN
     assert self.content is not None
 
-    with open(file_path, "r") as f:
+    with open(file_path, "r", encoding="utf-8") as f:
       lines = f.readlines()
 
     if self.endianness and self.endianness != endianness:
@@ -202,5 +202,5 @@ class Change:
     if not found:
       raise ValueError(f"Pattern {self.pattern} not found in file {file_path}")
 
-    with open(file_path, "w") as f:
+    with open(file_path, "w", encoding="utf-8") as f:
       f.writelines(lines)

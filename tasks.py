@@ -1,5 +1,6 @@
 from invoke import task
 import os
+import re
 import wget
 import zipfile
 import shutil
@@ -14,6 +15,11 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
   if not target_name[0].isupper():
     raise ValueError(
         f"Please provide a valid target name (upper case and camel case when applicable)")
+
+  # TODO: check for C++ keywords and existing architecture names
+  if not re.fullmatch("[a-zA-Z_][a-zA-Z0-9_]*", target_name):
+    raise ValueError(
+        f"Target name should start with a letter and consist of letters, numbers and underscore")
 
   if not os.path.isdir(path):
     os.mkdir(path)
@@ -80,7 +86,7 @@ def setup_new_environment(c, target_name, path, arch=32, endianness="little", ll
   search_replace_in_file(os.path.join(environment_path, "tasks.py"),
                          "<OFFICIAL_TARGETS_FILE_NAME>", OFFICIAL_TARGETS_FILE_NAME)
   
-  copy_file(os.path.join(LIB_ROOT, "vscode-workspace", "llvm-<target>-backend.code-workspace"),
+  copy_file(os.path.join(LIB_ROOT, "vscode-workspace", "llvm-target-backend.code-workspace"),
             os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"))
   
   search_replace_in_file(os.path.join(environment_path, f"llvm-{target_name.lower()}-backend.code-workspace"),
