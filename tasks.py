@@ -17,7 +17,7 @@ def check_arguments(target_name, path, arch, endianess, llvm_version):
         f"Please provide a valid target name (upper case and camel case when applicable)")
 
   # TODO: check for C++ keywords and existing architecture names
-  if not re.match("[a-zA-Z_][a-zA-Z0-9_]*", target_name):
+  if not re.fullmatch("[a-zA-Z_][a-zA-Z0-9_]*", target_name):
     raise ValueError(
         f"Target name should start with a letter and consist of letters, numbers and underscore")
 
